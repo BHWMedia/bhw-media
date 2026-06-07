@@ -1,0 +1,124 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', 'Fira Code',
+    monospace;
+
+  /* Surfaces */
+  --color-void: #0a0a0f;
+  --color-studio: #111118;
+  --color-card: #1a1a24;
+  --color-elevated: #22222e;
+  --color-border: #3a3a4e;
+
+  /* Text */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #c8c8d8;
+  --color-text-muted: #7a7a94;
+
+  /* Brand */
+  --color-violet: #7c5bff;
+  --color-violet-light: #9b7fff;
+  --color-violet-dark: #5a3fd4;
+  --color-violet-glow: rgba(124, 91, 255, 0.25);
+
+  --color-cyan: #00d4ff;
+  --color-cyan-light: #33dcff;
+  --color-cyan-glow: rgba(0, 212, 255, 0.2);
+
+  --color-gold: #f5a623;
+  --color-gold-light: #f7b84b;
+  --color-gold-glow: rgba(245, 166, 35, 0.2);
+
+  --color-crimson: #ff4d6d;
+  --color-crimson-glow: rgba(255, 77, 109, 0.2);
+
+  /* Background images */
+  --background-image-mesh-violet: radial-gradient(
+    ellipse 80% 60% at 50% -20%,
+    rgba(124, 91, 255, 0.3) 0%,
+    transparent 70%
+  );
+  --background-image-mesh-cyan: radial-gradient(
+    ellipse 60% 40% at 80% 80%,
+    rgba(0, 212, 255, 0.15) 0%,
+    transparent 60%
+  );
+  --background-image-glow-card: linear-gradient(
+    145deg,
+    rgba(124, 91, 255, 0.08) 0%,
+    rgba(0, 212, 255, 0.04) 100%
+  );
+
+  /* Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-glow-pulse: glowPulse 3s ease-in-out infinite;
+  --animate-marquee: marquee 30s linear infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+
+  @keyframes glowPulse {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(124, 91, 255, 0.3);
+    }
+    50% {
+      box-shadow:
+        0 0 40px rgba(124, 91, 255, 0.6),
+        0 0 80px rgba(124, 91, 255, 0.2);
+    }
+  }
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-text-primary);
+}
+
+::selection {
+  background: rgba(124, 91, 255, 0.3);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111118;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a4e;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7c5bff;
+}
