@@ -2,66 +2,63 @@
 
 import { useState, useRef } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowUpRight, Globe, Sparkles } from 'lucide-react'
+import { ArrowUpRight, Sparkles, Layout, ShoppingBag, Hexagon, Component, LineChart, Cpu } from 'lucide-react'
+import { type PortfolioItem } from '@/lib/constants'
 
-// Define resilient TypeScript interfaces to fully support advanced metadata
-export interface PortfolioItem {
-  id: string | number
-  title: string
-  description: string
-  category: string
-  image: string
-  tags?: string[]
-  link?: string
-  target?: string
+// Extend the interface locally to allow for optional images
+interface ExtendedPortfolioItem extends PortfolioItem {
+  image?: string;
 }
 
 interface PortfolioCardProps {
-  item: PortfolioItem
+  item: ExtendedPortfolioItem
 }
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
+// Elite Theme Engine based on constants.ts colors
+const getTheme = (color: string) => {
+  switch (color) {
+    case 'violet': return { text: 'text-violet-400', border: 'border-violet-500/30', bg: 'bg-violet-500/10', glow: 'rgba(139, 92, 246, 0.15)' }
+    case 'cyan': return { text: 'text-cyan-400', border: 'border-cyan-500/30', bg: 'bg-cyan-500/10', glow: 'rgba(6, 182, 212, 0.15)' }
+    case 'gold': return { text: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10', glow: 'rgba(245, 158, 11, 0.15)' }
+    case 'crimson': return { text: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10', glow: 'rgba(244, 63, 94, 0.15)' }
+    default: return { text: 'text-zinc-400', border: 'border-zinc-500/30', bg: 'bg-zinc-500/10', glow: 'rgba(255, 255, 255, 0.1)' }
+  }
+}
+
+// Map mockup types to high-end Lucide icons
+const getMockupIcon = (type: string) => {
+  switch (type) {
+    case 'dashboard': return <Layout size={32} strokeWidth={1.5} />
+    case 'ecommerce': return <ShoppingBag size={32} strokeWidth={1.5} />
+    case 'web3': return <Hexagon size={32} strokeWidth={1.5} />
+    case 'brand': return <Component size={32} strokeWidth={1.5} />
+    case 'finance': return <LineChart size={32} strokeWidth={1.5} />
+    case 'saas': return <Cpu size={32} strokeWidth={1.5} />
+    default: return <Layout size={32} strokeWidth={1.5} />
+  }
+}
+
 export function PortfolioCard({ item }: PortfolioCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
+  const theme = getTheme(item.color)
 
-  // Advanced mouse position tracking for the 3D tilt & dynamic glow effect
+  // Fluid 3D Physics Engine
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
 
-  // Smooth springs to eliminate jitter and create high-end organic movement
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [7, -7]), {
-    damping: 25,
-    stiffness: 150,
-  })
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-7, 7]), {
-    damping: 25,
-    stiffness: 150,
-  })
-
-  // Dynamic radial gradient positioning for the premium glowing backdrop
-  const glowX = useSpring(useTransform(mouseX, [-0.5, 0.5], ['0%', '100%']), {
-    damping: 30,
-    stiffness: 200,
-  })
-  const glowY = useSpring(useTransform(mouseY, [-0.5, 0.5], ['0%', '100%']), {
-    damping: 30,
-    stiffness: 200,
-  })
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), { damping: 30, stiffness: 200 })
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-6, 6]), { damping: 30, stiffness: 200 })
+  const glowX = useSpring(useTransform(mouseX, [-0.5, 0.5], ['0%', '100%']), { damping: 40, stiffness: 150 })
+  const glowY = useSpring(useTransform(mouseY, [-0.5, 0.5], ['0%', '100%']), { damping: 40, stiffness: 150 })
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return
     const rect = cardRef.current.getBoundingClientRect()
-    
-    // Calculate normalized position relative to the center (-0.5 to 0.5)
-    const width = rect.width
-    const height = rect.height
-    const mouseXPos = (e.clientX - rect.left) / width - 0.5
-    const mouseYPos = (e.clientY - rect.top) / height - 0.5
-
-    mouseX.set(mouseXPos)
-    mouseY.set(mouseYPos)
+    mouseX.set((e.clientX - rect.left) / rect.width - 0.5)
+    mouseY.set((e.clientY - rect.top) / rect.height - 0.5)
   }
 
   const handleMouseLeave = () => {
@@ -76,107 +73,103 @@ export function PortfolioCard({ item }: PortfolioCardProps) {
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: 'preserve-3d',
-        perspective: 1000,
-      }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-500"
+      style={{ rotateX, rotateY, transformStyle: 'preserve-3d', perspective: 1000 }}
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-[#0C0C12] transition-all duration-500"
     >
-      {/* ── BACKGROUND LAYER & CARD OVERLAYS ── */}
-      <div 
-        className="absolute inset-0 z-0 transition-colors duration-500 bg-[#111118] group-hover:bg-[#14141F]" 
-        style={{ border: '1px solid rgba(58, 58, 78, 0.4)' }}
-      />
+      {/* Base Structural Layer */}
+      <div className="absolute inset-0 z-0 rounded-2xl border border-white/[0.08] transition-colors duration-500 group-hover:border-white/[0.15]" />
       
-      {/* Premium Dynamic Spotlight Glow Effect */}
+      {/* GPU-Accelerated Dynamic Spotlight */}
       <motion.div
         className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        style={{
-          background: `radial-gradient(800px circle at ${glowX.get()} ${glowY.get()}, rgba(124, 91, 255, 0.12), transparent 40%)`,
-        }}
+        style={{ background: `radial-gradient(600px circle at ${glowX.get()} ${glowY.get()}, ${theme.glow}, transparent 40%)` }}
       />
 
-      <div className="relative z-20 flex h-full flex-col p-5" style={{ transform: 'translateZ(20px)' }}>
+      <div className="relative z-20 flex h-full flex-col p-6" style={{ transform: 'translateZ(30px)' }}>
         
-        {/* ── IMAGE SECTION (ASPECT-RATIO LOCK) ── */}
-        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-void">
-          {/* Subtle thumbnail gradient mask */}
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/0 to-black/30 opacity-80 transition-opacity duration-300 group-hover:opacity-40" />
+        {/* ── VISUAL HEADER (HYBRID ENGINE) ── */}
+        <div className={`relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl border ${theme.border} ${item.image ? 'bg-black' : theme.bg}`}>
           
-          <motion.img
-            src={item.image || '/placeholder-portfolio.jpg'}
-            alt={item.title}
-            className="h-full w-full object-cover"
-            initial={{ scale: 1 }}
-            animate={{ scale: isHovered ? 1.05 : 1 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          />
+          {item.image ? (
+            // Render Image if provided in constants.ts
+            <>
+              <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/0 to-black/30 opacity-80 transition-opacity duration-300 group-hover:opacity-40" />
+              <motion.img
+                src={item.image}
+                alt={item.title}
+                className="h-full w-full object-cover"
+                initial={{ scale: 1 }}
+                animate={{ scale: isHovered ? 1.05 : 1 }}
+                transition={{ duration: 0.6, ease: EASE }}
+              />
+            </>
+          ) : (
+            // Render High-End Generative Background if no image exists
+            <>
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_60%,transparent_100%)]" />
+              <motion.div
+                initial={{ scale: 1 }}
+                animate={{ scale: isHovered ? 1.05 : 1 }}
+                transition={{ duration: 0.6, ease: EASE }}
+                className="relative z-10 flex flex-col items-center gap-3"
+              >
+                <div className={`${theme.text} opacity-80`}>
+                  {getMockupIcon(item.mockupType)}
+                </div>
+                <span className="font-mono text-xs font-bold tracking-widest text-white/50 uppercase">
+                  {item.mockupType} Matrix
+                </span>
+              </motion.div>
+            </>
+          )}
 
-          {/* Floating Category Badge inside image space */}
-          <div className="absolute left-4 top-4 z-20">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-mono tracking-wider text-cyan backdrop-blur-md bg-void/60 border border-white/5 uppercase">
-              <Sparkles size={10} className="text-cyan animate-pulse" />
+          {/* Floating Category Badge */}
+          <div className="absolute left-3 top-3 z-20">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+              <Sparkles size={10} className={theme.text} />
               {item.category}
             </span>
           </div>
-
-          {/* Interactive Live Preview Trigger */}
-          {item.link && (
-            <div className="absolute right-4 bottom-4 z-20">
-              <motion.a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-white bg-violet/90 backdrop-blur-sm shadow-lg transition-transform hover:scale-110 hover:bg-violet-light"
-                whileHover={{ rotate: 45 }}
-                transition={{ duration: 0.2 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ArrowUpRight size={16} />
-              </motion.a>
-            </div>
-          )}
         </div>
 
-        {/* ── DETAILS SECTION ── */}
-        <div className="mt-5 flex flex-1 flex-col justify-between">
-          <div>
-            {/* Title with sleek interactive text reveal color highlight */}
-            <h3 className="text-lg font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-violet">
-              {item.title}
-            </h3>
+        {/* ── METADATA & CTA SECTION ── */}
+        <div className="mt-6 flex flex-1 flex-col">
+          <h3 className={`text-xl font-bold tracking-tight text-white transition-colors duration-300 group-hover:${theme.text.replace('text-', '')}`}>
+            {item.title}
+          </h3>
+          <p className="mt-3 text-sm leading-relaxed text-zinc-400 line-clamp-2">
+            {item.description}
+          </p>
 
-            {/* Target Audience / Pipeline Context Tag */}
-            {item.target && (
-              <p className="mt-1 flex items-center gap-1 text-xs font-medium text-[#7A7A94]">
-                <Globe size={12} className="text-cyan" />
-                Target: {item.target}
-              </p>
-            )}
-
-            {/* Core Description Body */}
-            <p className="mt-3 text-sm leading-relaxed text-[#C8C8D8] line-clamp-3">
-              {item.description}
-            </p>
+          {/* Tech Stack Pills */}
+          <div className="mt-5 flex flex-wrap gap-2">
+            {item.tags.map((tag) => (
+              <span key={tag} className="rounded-md border border-white/5 bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-zinc-400 transition-colors group-hover:border-white/10 group-hover:text-zinc-300">
+                {tag}
+              </span>
+            ))}
           </div>
 
-          {/* ── TECHNOLOGY PILLS FOOTER ── */}
-          {item.tags && item.tags.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-2 pt-4" style={{ borderTop: '1px solid rgba(58, 58, 78, 0.3)' }}>
-              {item.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-md bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-[#7A7A94] border border-white/[0.04] transition-all duration-300 group-hover:border-violet/20 group-hover:text-[#A3A3C2]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* High-Converting CTA Button */}
+          <div className="mt-auto pt-6">
+            {item.liveUrl ? (
+              <a
+                href={item.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group/btn relative flex w-full items-center justify-center gap-2 rounded-lg border ${theme.border} ${theme.bg} px-4 py-3 text-sm font-semibold text-white transition-all duration-300 hover:border-white/30 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                Launch Live Platform
+                <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
+              </a>
+            ) : (
+              <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-white/10 bg-transparent px-4 py-3 text-sm font-semibold text-white/30 cursor-not-allowed">
+                Environment Offline
+              </div>
+            )}
+          </div>
         </div>
-
       </div>
     </motion.div>
   )

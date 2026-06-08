@@ -334,6 +334,20 @@ export async function POST(request: Request): Promise<NextResponse> {
       )
     }
 
+    // 5. CRM WEBHOOK REVENUE PIPELINE (Non-blocking execution)
+    const MAKE_WEBHOOK_URL = process.env.MAKE_CRM_WEBHOOK_URL
+    if (MAKE_WEBHOOK_URL) {
+      fetch(MAKE_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...validData,
+          leadSource: 'BHW Main Intake Matrix',
+          timestamp: new Date().toISOString()
+        })
+      }).catch(err => console.error('[BHW CRM Pipeline Error]:', err))
+    }
+
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (err) {
     console.error('[BHW System Failure] Crash unexpected trace:', err)

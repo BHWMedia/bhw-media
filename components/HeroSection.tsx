@@ -74,12 +74,21 @@ export function HeroSection() {
                 Book Architecture Sprint
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link
-               href="/portfolio"
-               className="inline-flex items-center gap-2 rounded-full border border-[#3A3A4E]..."
->                   
-                Explore Live Inventory
-                </Link>
+              <Link 
+  href="/portfolio" 
+  className="group relative inline-flex items-center justify-center gap-3 rounded-full border border-white/15 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:border-white/40 hover:bg-white/5"
+>
+  <span>Explore Live Inventory</span>
+  <svg 
+    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    stroke="currentColor" 
+    strokeWidth={2}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+  </svg>
+</Link>
             </motion.div>
 
             {/* Micro-Trust Badges */}
