@@ -1,158 +1,183 @@
-import type { PortfolioItem, AccentColor } from '@/lib/constants'
+'use client'
 
-const ACCENT_BORDER: Record<AccentColor, string> = {
-  violet: 'border-violet',
-  cyan: 'border-cyan',
-  gold: 'border-gold',
-  crimson: 'border-crimson',
+import { useState, useRef } from 'react'
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { ArrowUpRight, Globe, Sparkles } from 'lucide-react'
+
+// Define resilient TypeScript interfaces to fully support advanced metadata
+export interface PortfolioItem {
+  id: string | number
+  title: string
+  description: string
+  category: string
+  image: string
+  tags?: string[]
+  link?: string
+  target?: string
 }
 
-const ACCENT_TEXT: Record<AccentColor, string> = {
-  violet: 'text-violet',
-  cyan: 'text-cyan',
-  gold: 'text-gold',
-  crimson: 'text-crimson',
+interface PortfolioCardProps {
+  item: PortfolioItem
 }
 
-function Mockup({ item }: { item: PortfolioItem }) {
-  switch (item.mockupType) {
-    case 'dashboard':
-      return (
-        <div className="flex h-full flex-col gap-2 p-4">
-          <div className="h-6 rounded bg-card" />
-          <div className="grid grid-cols-3 gap-2">
-            <div className="h-10 rounded border-t-2 border-violet bg-card" />
-            <div className="h-10 rounded border-t-2 border-cyan bg-card" />
-            <div className="h-10 rounded border-t-2 border-gold bg-card" />
-          </div>
-          <div className="flex flex-1 items-end gap-1.5 rounded bg-card p-2">
-            {[40, 70, 50, 90, 60, 80].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-t bg-violet"
-                style={{ height: `${h}%`, opacity: 0.4 + (h / 100) * 0.5 }}
-              />
-            ))}
-          </div>
-        </div>
-      )
-    case 'ecommerce':
-      return (
-        <div className="flex h-full flex-col gap-3 p-5">
-          <div className="h-20 flex-1 rounded-lg bg-card" />
-          <div className="h-2.5 w-2/3 rounded-full bg-card" />
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-text-primary">
-              $149.00
-            </span>
-            <span className="rounded-full bg-violet px-3 py-1 text-[10px] font-medium text-white">
-              Add to Cart
-            </span>
-          </div>
-        </div>
-      )
-    case 'web3':
-      return (
-        <div className="flex h-full flex-col items-center justify-center gap-3 p-5">
-          <div
-            className={`flex h-14 w-14 rotate-45 items-center justify-center rounded-lg border-2 ${ACCENT_BORDER[item.color]} bg-card`}
-          >
-            <div
-              className={`h-6 w-6 -rotate-45 rounded ${ACCENT_TEXT[item.color]}`}
-              style={{ backgroundColor: 'currentColor', opacity: 0.4 }}
-            />
-          </div>
-          <span className="font-mono text-xs text-text-muted">
-            0x7c…5bff
-          </span>
-          <span className="font-mono text-sm font-semibold text-text-primary">
-            1,240.5 ETH
-          </span>
-        </div>
-      )
-    case 'brand':
-      return (
-        <div className="flex h-full items-center justify-center p-5">
-          <span
-            className={`text-balance text-center text-3xl font-bold ${ACCENT_TEXT[item.color]}`}
-          >
-            {item.title}
-          </span>
-        </div>
-      )
-    case 'saas':
-      return (
-        <div className="flex h-full gap-3 p-4">
-          <div className="flex w-12 flex-col gap-2">
-            <div className="h-2.5 rounded bg-card" />
-            <div className="h-2.5 rounded bg-card" />
-            <div className="h-2.5 rounded bg-card" />
-            <div className="h-2.5 rounded bg-card" />
-          </div>
-          <div className="flex-1 space-y-2">
-            <div className="h-8 rounded bg-card" />
-            <div className="h-16 rounded bg-card" />
-            <div className="h-6 w-2/3 rounded bg-card" />
-          </div>
-        </div>
-      )
-    case 'finance':
-      return (
-        <div className="flex h-full flex-col gap-2 p-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 rounded bg-card px-3 py-1.5"
-            >
-              <span className="font-mono text-[10px] text-text-muted">
-                0{i + 1}
-              </span>
-              <div className="h-2 flex-1 rounded-full bg-elevated" />
-              <span className="font-mono text-[10px] text-gold">
-                ${(i + 1) * 1240}
-              </span>
-            </div>
-          ))}
-        </div>
-      )
-    default:
-      return null
+const EASE = [0.16, 1, 0.3, 1] as const
+
+export function PortfolioCard({ item }: PortfolioCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [isHovered, setIsHovered] = useState(false)
+
+  // Advanced mouse position tracking for the 3D tilt & dynamic glow effect
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
+  // Smooth springs to eliminate jitter and create high-end organic movement
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [7, -7]), {
+    damping: 25,
+    stiffness: 150,
+  })
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-7, 7]), {
+    damping: 25,
+    stiffness: 150,
+  })
+
+  // Dynamic radial gradient positioning for the premium glowing backdrop
+  const glowX = useSpring(useTransform(mouseX, [-0.5, 0.5], ['0%', '100%']), {
+    damping: 30,
+    stiffness: 200,
+  })
+  const glowY = useSpring(useTransform(mouseY, [-0.5, 0.5], ['0%', '100%']), {
+    damping: 30,
+    stiffness: 200,
+  })
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    
+    // Calculate normalized position relative to the center (-0.5 to 0.5)
+    const width = rect.width
+    const height = rect.height
+    const mouseXPos = (e.clientX - rect.left) / width - 0.5
+    const mouseYPos = (e.clientY - rect.top) / height - 0.5
+
+    mouseX.set(mouseXPos)
+    mouseY.set(mouseYPos)
   }
-}
 
-export function PortfolioCard({ item }: { item: PortfolioItem }) {
+  const handleMouseLeave = () => {
+    setIsHovered(false)
+    mouseX.set(0)
+    mouseY.set(0)
+  }
+
   return (
-    <div className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border/50 bg-card transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-      {/* Visual area */}
-      <div
-        className={`relative h-52 border-b-2 bg-elevated ${ACCENT_BORDER[item.color]}`}
-      >
-        <Mockup item={item} />
-        {/* Hover overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-void/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <span className="rounded-full bg-violet px-5 py-2 text-sm font-medium text-white">
-            View Project →
-          </span>
-        </div>
-      </div>
+    <motion.div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        perspective: 1000,
+      }}
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-500"
+    >
+      {/* ── BACKGROUND LAYER & CARD OVERLAYS ── */}
+      <div 
+        className="absolute inset-0 z-0 transition-colors duration-500 bg-[#111118] group-hover:bg-[#14141F]" 
+        style={{ border: '1px solid rgba(58, 58, 78, 0.4)' }}
+      />
+      
+      {/* Premium Dynamic Spotlight Glow Effect */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        style={{
+          background: `radial-gradient(800px circle at ${glowX.get()} ${glowY.get()}, rgba(124, 91, 255, 0.12), transparent 40%)`,
+        }}
+      />
 
-      {/* Info */}
-      <div className="p-5">
-        <h3 className="text-lg font-semibold text-text-primary">{item.title}</h3>
-        <p className="mb-3 mt-1 text-sm leading-relaxed text-text-secondary">
-          {item.description}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-elevated px-2.5 py-1 font-mono text-xs text-text-muted"
-            >
-              {tag}
+      <div className="relative z-20 flex h-full flex-col p-5" style={{ transform: 'translateZ(20px)' }}>
+        
+        {/* ── IMAGE SECTION (ASPECT-RATIO LOCK) ── */}
+        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-void">
+          {/* Subtle thumbnail gradient mask */}
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/0 to-black/30 opacity-80 transition-opacity duration-300 group-hover:opacity-40" />
+          
+          <motion.img
+            src={item.image || '/placeholder-portfolio.jpg'}
+            alt={item.title}
+            className="h-full w-full object-cover"
+            initial={{ scale: 1 }}
+            animate={{ scale: isHovered ? 1.05 : 1 }}
+            transition={{ duration: 0.6, ease: EASE }}
+          />
+
+          {/* Floating Category Badge inside image space */}
+          <div className="absolute left-4 top-4 z-20">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-mono tracking-wider text-cyan backdrop-blur-md bg-void/60 border border-white/5 uppercase">
+              <Sparkles size={10} className="text-cyan animate-pulse" />
+              {item.category}
             </span>
-          ))}
+          </div>
+
+          {/* Interactive Live Preview Trigger */}
+          {item.link && (
+            <div className="absolute right-4 bottom-4 z-20">
+              <motion.a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white bg-violet/90 backdrop-blur-sm shadow-lg transition-transform hover:scale-110 hover:bg-violet-light"
+                whileHover={{ rotate: 45 }}
+                transition={{ duration: 0.2 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ArrowUpRight size={16} />
+              </motion.a>
+            </div>
+          )}
         </div>
+
+        {/* ── DETAILS SECTION ── */}
+        <div className="mt-5 flex flex-1 flex-col justify-between">
+          <div>
+            {/* Title with sleek interactive text reveal color highlight */}
+            <h3 className="text-lg font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-violet">
+              {item.title}
+            </h3>
+
+            {/* Target Audience / Pipeline Context Tag */}
+            {item.target && (
+              <p className="mt-1 flex items-center gap-1 text-xs font-medium text-[#7A7A94]">
+                <Globe size={12} className="text-cyan" />
+                Target: {item.target}
+              </p>
+            )}
+
+            {/* Core Description Body */}
+            <p className="mt-3 text-sm leading-relaxed text-[#C8C8D8] line-clamp-3">
+              {item.description}
+            </p>
+          </div>
+
+          {/* ── TECHNOLOGY PILLS FOOTER ── */}
+          {item.tags && item.tags.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2 pt-4" style={{ borderTop: '1px solid rgba(58, 58, 78, 0.3)' }}>
+              {item.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-md bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium text-[#7A7A94] border border-white/[0.04] transition-all duration-300 group-hover:border-violet/20 group-hover:text-[#A3A3C2]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
-    </div>
+    </motion.div>
   )
 }

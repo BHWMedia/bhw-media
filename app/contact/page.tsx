@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import {
   Mail,
   Clock,
@@ -13,39 +13,40 @@ import {
   Loader2,
   ArrowUpRight,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react'
 
-// ─── Drop-in Brand Icons ──────────────────────────────────────────────────────
+// ─── Drop-In Premium Brand SVGs ──────────────────────────────────────────────
 
-const Github = ({ size = 24, ...props }: any) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+const Github = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.2c3-.3 6-1.6 6-6.5a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.9 3 6.2 6 6.5a4.8 4.8 0 0 0-1 3.2v4" />
   </svg>
 )
 
-const Twitter = ({ size = 24, ...props }: any) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+const Twitter = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
   </svg>
 )
 
-const Linkedin = ({ size = 24, ...props }: any) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+const Linkedin = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
     <rect width="4" height="12" x="2" y="9" />
     <circle cx="4" cy="4" r="2" />
   </svg>
 )
 
-const Instagram = ({ size = 24, ...props }: any) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+const Instagram = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
     <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
   </svg>
 )
 
-// ─── Validation schema ────────────────────────────────────────────────────────
+// ─── Strict Schema Validation ──────────────────────────────────────────────────
 
 const contactSchema = z.object({
   name: z
@@ -58,66 +59,50 @@ const contactSchema = z.object({
   company: z.string().max(100).optional(),
   projectType: z
     .string()
-    .min(1, 'Please select a project type'),
+    .min(1, 'Please select a project type selection'),
   budget: z
     .string()
-    .min(1, 'Please select a budget range'),
+    .min(1, 'Please select your target budget scope'),
   brief: z
     .string()
-    .min(30, 'Please add more detail — minimum 30 characters')
-    .max(2000, 'Brief is too long — maximum 2000 characters'),
+    .min(30, 'Please add more details — minimum 30 characters required')
+    .max(2000, 'Brief limit exceeded — maximum 2000 characters'),
   referral: z.string().optional(),
 })
 
 type ContactFormData = z.infer<typeof contactSchema>
 
-// ─── Static data ──────────────────────────────────────────────────────────────
+// ─── Production Datasets ──────────────────────────────────────────────────────
 
 const INFO_CARDS = [
   {
     Icon: Mail,
-    label: 'Email',
+    label: 'Email Production Desk',
     value: 'mediabhw@gmail.com',
     href: 'mailto:mediabhw@gmail.com',
     accent: '#7C5BFF',
   },
   {
     Icon: Clock,
-    label: 'Response Time',
-    value: 'Within 24 hours',
+    label: 'Response Latency',
+    value: 'Within 24 business hours',
     href: null,
     accent: '#00D4FF',
   },
   {
     Icon: Globe,
-    label: 'Working With',
-    value: 'Clients globally',
+    label: 'Availability Spectrum',
+    value: 'Deploying networks globally',
     href: null,
     accent: '#F5A623',
   },
 ]
 
 const SOCIAL_LINKS = [
-  {
-    Icon: Github,
-    href: 'https://github.com',
-    label: 'GitHub',
-  },
-  {
-    Icon: Twitter,
-    href: 'https://twitter.com',
-    label: 'Twitter',
-  },
-  {
-    Icon: Linkedin,
-    href: 'https://linkedin.com/company/bhwmedia',
-    label: 'LinkedIn',
-  },
-  {
-    Icon: Instagram,
-    href: 'https://instagram.com/media._bhw',
-    label: 'Instagram',
-  },
+  { Icon: Github, href: 'https://github.com', label: 'GitHub' },
+  { Icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
+  { Icon: Linkedin, href: 'https://linkedin.com/company/bhwmedia', label: 'LinkedIn' },
+  { Icon: Instagram, href: 'https://instagram.com/media._bhw', label: 'Instagram' },
 ]
 
 const PROJECT_TYPES = [
@@ -127,7 +112,7 @@ const PROJECT_TYPES = [
   'E-Commerce Build',
   'Motion & Interaction Design',
   'Growth Retainer Plan',
-  'Not sure yet — tell me more',
+  'Not sure yet — consult me',
 ]
 
 const BUDGET_RANGES = [
@@ -140,53 +125,19 @@ const BUDGET_RANGES = [
 
 const REFERRAL_SOURCES = [
   'Google Search',
-  'Social Media',
-  'Referral from someone',
-  'Portfolio / Dribbble',
-  'Other',
+  'Social Media Workspace',
+  'Direct Network Referral',
+  'Portfolio Showcase (Dribbble/Behance)',
+  'Other Stream',
 ]
 
-// ─── Shared input styles ──────────────────────────────────────────────────────
+// ─── High-End Sub-Components (React 19 Ref Compliant) ─────────────────────────
 
-const baseInputStyle: React.CSSProperties = {
-  width: '100%',
-  backgroundColor: '#1A1A24',
-  border: '1px solid rgba(58,58,78,0.7)',
-  borderRadius: '0.75rem',
-  padding: '0.75rem 1rem',
-  color: '#FFFFFF',
-  fontSize: '0.875rem',
-  outline: 'none',
-  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-}
-
-const focusStyle: React.CSSProperties = {
-  borderColor: '#7C5BFF',
-  boxShadow: '0 0 0 3px rgba(124,91,255,0.18)',
-}
-
-const errorBorderStyle: React.CSSProperties = {
-  borderColor: '#FF4D6D',
-}
-
-// ─── Reusable field components ────────────────────────────────────────────────
-
-function FieldLabel({
-  children,
-  required,
-}: {
-  children: React.ReactNode
-  required?: boolean
-}) {
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label
-      className="block text-sm font-medium mb-1.5"
-      style={{ color: '#C8C8D8' }}
-    >
+    <label className="block text-xs font-mono tracking-wider uppercase mb-2 text-[#A3A3C2]">
       {children}
-      {required && (
-        <span style={{ color: '#7C5BFF', marginLeft: '2px' }}>*</span>
-      )}
+      {required && <span className="text-[#7C5BFF] ml-1">*</span>}
     </label>
   )
 }
@@ -197,161 +148,122 @@ function FieldError({ message }: { message?: string }) {
     <motion.p
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className="flex items-center gap-1.5 text-xs mt-1.5"
-      style={{ color: '#FF4D6D' }}
+      className="flex items-center gap-1.5 text-xs mt-2 text-[#FF4D6D]"
     >
-      <AlertCircle size={11} />
+      <AlertCircle size={12} />
       {message}
     </motion.p>
   )
 }
 
-function StyledInput({
-  hasError,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { hasError?: boolean }) {
+interface InputProps extends React.ComponentPropsWithRef<'input'> {
+  hasError?: boolean
+}
+
+function StyledInput({ hasError, className, ...props }: InputProps) {
   const [focused, setFocused] = useState(false)
   return (
     <input
       {...props}
-      onFocus={(e) => {
-        setFocused(true)
-        props.onFocus?.(e)
-      }}
-      onBlur={(e) => {
-        setFocused(false)
-        props.onBlur?.(e)
-      }}
-      style={{
-        ...baseInputStyle,
-        ...(focused ? focusStyle : {}),
-        ...(hasError && !focused ? errorBorderStyle : {}),
-      }}
+      onFocus={(e) => { setFocused(true); props.onFocus?.(e) }}
+      onBlur={(e) => { setFocused(false); props.onBlur?.(e) }}
+      className={`w-full bg-[#161622] text-white text-sm rounded-xl px-4 py-3 border transition-all duration-200 outline-none ${
+        focused
+          ? 'border-[#7C5BFF] ring-4 ring-[#7C5BFF]/15'
+          : hasError
+          ? 'border-[#FF4D6D]'
+          : 'border-white/5 hover:border-white/10'
+      } ${className || ''}`}
     />
   )
 }
 
-function StyledSelect({
-  hasError,
-  children,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement> & { hasError?: boolean }) {
-  const [focused, setFocused] = useState(false)
-  return (
-    <select
-      {...props}
-      onFocus={(e) => {
-        setFocused(true)
-        props.onFocus?.(e)
-      }}
-      onBlur={(e) => {
-        setFocused(false)
-        props.onBlur?.(e)
-      }}
-      style={{
-        ...baseInputStyle,
-        ...(focused ? focusStyle : {}),
-        ...(hasError && !focused ? errorBorderStyle : {}),
-        appearance: 'none',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A7A94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 1rem center',
-        paddingRight: '2.5rem',
-        color: props.value === '' ? '#7A7A94' : '#FFFFFF',
-      }}
-    >
-      {children}
-    </select>
-  )
+interface TextareaProps extends React.ComponentPropsWithRef<'textarea'> {
+  hasError?: boolean
 }
 
-function StyledTextarea({
-  hasError,
-  ...props
-}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { hasError?: boolean }) {
+function StyledTextarea({ hasError, className, ...props }: TextareaProps) {
   const [focused, setFocused] = useState(false)
   return (
     <textarea
       {...props}
-      onFocus={(e) => {
-        setFocused(true)
-        props.onFocus?.(e)
-      }}
-      onBlur={(e) => {
-        setFocused(false)
-        props.onBlur?.(e)
-      }}
-      style={{
-        ...baseInputStyle,
-        resize: 'none',
-        ...(focused ? focusStyle : {}),
-        ...(hasError && !focused ? errorBorderStyle : {}),
-      }}
+      onFocus={(e) => { setFocused(true); props.onFocus?.(e) }}
+      onBlur={(e) => { setFocused(false); props.onBlur?.(e) }}
+      className={`w-full bg-[#161622] text-white text-sm rounded-xl px-4 py-3 border transition-all duration-200 outline-none resize-none ${
+        focused
+          ? 'border-[#7C5BFF] ring-4 ring-[#7C5BFF]/15'
+          : hasError
+          ? 'border-[#FF4D6D]'
+          : 'border-white/5 hover:border-white/10'
+      } ${className || ''}`}
     />
   )
 }
 
-// ─── Success state ────────────────────────────────────────────────────────────
+function StyledSelect({ hasError, children, className, ...props }: React.ComponentPropsWithRef<'select'> & { hasError?: boolean }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <div className="relative w-full">
+      <select
+        {...props}
+        onFocus={(e) => { setFocused(true); props.onFocus?.(e) }}
+        onBlur={(e) => { setFocused(false); props.onBlur?.(e) }}
+        className={`w-full bg-[#161622] text-white text-sm rounded-xl px-4 py-3 border outline-none appearance-none transition-all duration-200 ${
+          focused
+            ? 'border-[#7C5BFF] ring-4 ring-[#7C5BFF]/15'
+            : hasError
+            ? 'border-[#FF4D6D]'
+            : 'border-white/5 hover:border-white/10'
+        } ${className || ''}`}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A7A94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 1rem center',
+          paddingRight: '2.5rem',
+        }}
+      >
+        {children}
+      </select>
+    </div>
+  )
+}
 
-function SuccessState({
-  email,
-  onReset,
-}: {
-  email: string
-  onReset: () => void
-}) {
+// ─── Modern Post-Submission Interface ──────────────────────────────────────────
+
+function SuccessState({ email, onReset }: { email: string; onReset: () => void }) {
   return (
     <motion.div
-      initial={{ scale: 0.88, opacity: 0 }}
+      initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-      className="flex flex-col items-center justify-center text-center py-14 px-6"
+      className="flex flex-col items-center justify-center text-center py-12 px-4"
     >
-      <div
-        className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
-        style={{ backgroundColor: 'rgba(124,91,255,0.15)' }}
-      >
-        <CheckCircle size={40} style={{ color: '#7C5BFF' }} />
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-[#7C5BFF]/10 border border-[#7C5BFF]/20">
+        <CheckCircle size={32} className="text-[#7C5BFF]" />
       </div>
 
-      <h3
-        className="font-bold text-2xl mb-3"
-        style={{ color: '#FFFFFF' }}
-      >
-        Message received.
+      <h3 className="font-bold text-2xl text-white mb-2 tracking-tight">
+        Brief Synchronized Successfully
       </h3>
 
-      <p
-        className="text-sm leading-relaxed max-w-xs mb-2"
-        style={{ color: '#C8C8D8' }}
-      >
-        We&apos;ll review your brief and come back with a clear plan within 24 hours.
+      <p className="text-sm text-[#C8C8D8] max-w-sm mb-1.5 leading-relaxed">
+        Our strategy core is reviewing your structural metrics. A dedicated proposal architect will establish contact within 24 hours.
       </p>
 
-      <p className="text-xs mb-8" style={{ color: '#7A7A94' }}>
-        Look out for us at{' '}
-        <span style={{ color: '#00D4FF' }}>{email}</span>
+      <p className="text-xs text-[#7A7A94] mb-8">
+        Receipt confirmation dispatched to <span className="text-[#00D4FF] font-mono">{email}</span>
       </p>
 
       <button
         onClick={onReset}
-        className="text-sm transition-colors duration-200 underline underline-offset-4"
-        style={{ color: '#7A7A94' }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = '#FFFFFF'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#7A7A94'
-        }}
+        className="text-xs font-mono uppercase tracking-wider text-[#7A7A94] hover:text-white transition-colors underline underline-offset-4"
       >
-        Send another message
+        Initiate secondary terminal brief
       </button>
     </motion.div>
   )
 }
 
-// ─── The form ─────────────────────────────────────────────────────────────────
+// ─── Dynamic Engine Core (Form Module) ─────────────────────────────────────────
 
 function ContactForm() {
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -363,6 +275,7 @@ function ContactForm() {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -379,6 +292,7 @@ function ContactForm() {
 
   const watchedProjectType = watch('projectType')
   const watchedBudget = watch('budget')
+  const watchedBrief = watch('brief') || ''
   const watchedReferral = watch('referral')
 
   const onSubmit = async (data: ContactFormData) => {
@@ -392,192 +306,168 @@ function ContactForm() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        throw new Error(body?.error ?? 'Send failed')
+        throw new Error(body?.error || 'Transmission failure')
       }
 
       setSubmittedEmail(data.email)
       setIsSubmitted(true)
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Unexpected error'
       setSubmitError(
-        message === 'Send failed'
-          ? 'Something went wrong on our end. Please email us directly at mediabhw@gmail.com'
-          : message,
+        err instanceof Error && err.message !== 'Transmission failure'
+          ? err.message
+          : 'Communication node busy. Please transfer your scope directly to mediabhw@gmail.com'
       )
     }
   }
 
-  const handleReset = () => {
-    setIsSubmitted(false)
-    setSubmitError('')
-    setSubmittedEmail('')
-    reset()
-  }
-
   if (isSubmitted) {
-    return <SuccessState email={submittedEmail} onReset={handleReset} />
+    return <SuccessState email={submittedEmail} onReset={() => { setIsSubmitted(false); reset() }} />
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-
-      {/* ── Row: Name + Email ── */}
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
+      
+      {/* Name & Email Field Split Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <FieldLabel required>Full Name</FieldLabel>
+          <FieldLabel required>Full Identity</FieldLabel>
           <StyledInput
             {...register('name')}
-            placeholder="Your name"
+            placeholder="John Doe"
             hasError={!!errors.name}
-            autoComplete="name"
           />
           <FieldError message={errors.name?.message} />
         </div>
 
         <div>
-          <FieldLabel required>Email Address</FieldLabel>
+          <FieldLabel required>Email Node</FieldLabel>
           <StyledInput
             {...register('email')}
             type="email"
-            placeholder="you@company.com"
+            placeholder="john@studio.com"
             hasError={!!errors.email}
-            autoComplete="email"
           />
           <FieldError message={errors.email?.message} />
         </div>
       </div>
 
-      {/* ── Company ── */}
+      {/* Corporate Metadata Group */}
       <div>
-        <FieldLabel>Company / Brand</FieldLabel>
+        <FieldLabel>Company / Ecosystem</FieldLabel>
         <StyledInput
           {...register('company')}
-          placeholder="Your company name (optional)"
-          autoComplete="organization"
+          placeholder="Corporate ecosystem name (optional)"
         />
       </div>
 
-      {/* ── Row: Project type + Budget ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div>
-          <FieldLabel required>Project Type</FieldLabel>
-          <StyledSelect
-            {...register('projectType')}
-            hasError={!!errors.projectType}
-            value={watchedProjectType}
-          >
-            <option value="" disabled>
-              Select a service
-            </option>
-            {PROJECT_TYPES.map((type) => (
-              <option key={type} value={type}>
+      {/* Luxury Interactive Project Matrix (Pill Selector Design Pattern) */}
+      <div>
+        <FieldLabel required>Project Target Vector</FieldLabel>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {PROJECT_TYPES.map((type) => {
+            const isSelected = watchedProjectType === type
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setValue('projectType', type, { shouldValidate: true })}
+                className={`relative px-3.5 py-2 rounded-xl text-xs font-medium border transition-all duration-300 cursor-pointer ${
+                  isSelected
+                    ? 'border-[#7C5BFF] text-white bg-[#7C5BFF]/10 shadow-[0_0_20px_rgba(124,91,255,0.15)]'
+                    : 'border-white/5 text-[#7A7A94] bg-white/[0.01] hover:border-white/15 hover:text-white'
+                }`}
+              >
                 {type}
-              </option>
-            ))}
-          </StyledSelect>
-          <FieldError message={errors.projectType?.message} />
+              </button>
+            )
+          })}
         </div>
-
-        <div>
-          <FieldLabel required>Budget Range</FieldLabel>
-          <StyledSelect
-            {...register('budget')}
-            hasError={!!errors.budget}
-            value={watchedBudget}
-          >
-            <option value="" disabled>
-              Select a range
-            </option>
-            {BUDGET_RANGES.map((range) => (
-              <option key={range} value={range}>
-                {range}
-              </option>
-            ))}
-          </StyledSelect>
-          <FieldError message={errors.budget?.message} />
-        </div>
+        <FieldError message={errors.projectType?.message} />
       </div>
 
-      {/* ── Project brief ── */}
+      {/* Luxury Budget Allocator Matrix */}
       <div>
-        <FieldLabel required>Project Brief</FieldLabel>
+        <FieldLabel required>Financial Threshold Scope</FieldLabel>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+          {BUDGET_RANGES.map((range) => {
+            const isSelected = watchedBudget === range
+            return (
+              <button
+                key={range}
+                type="button"
+                onClick={() => setValue('budget', range, { shouldValidate: true })}
+                className={`px-3 py-2.5 rounded-xl text-xs font-medium border text-center transition-all duration-300 cursor-pointer ${
+                  isSelected
+                    ? 'border-[#7C5BFF] text-white bg-[#7C5BFF]/10 shadow-[0_0_20px_rgba(124,91,255,0.15)]'
+                    : 'border-white/5 text-[#7A7A94] bg-white/[0.01] hover:border-white/15 hover:text-white'
+                }`}
+              >
+                {range}
+              </button>
+            )
+          })}
+        </div>
+        <FieldError message={errors.budget?.message} />
+      </div>
+
+      {/* Scope Brief + High Fidelity Character Metric Ring */}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <FieldLabel required>Structural Brief Specifications</FieldLabel>
+          <span className={`text-[10px] font-mono tracking-wider ${watchedBrief.length >= 30 ? 'text-[#00D4FF]' : 'text-[#7A7A94]'}`}>
+            {watchedBrief.length} / 2000 CHARS
+          </span>
+        </div>
         <StyledTextarea
           {...register('brief')}
           rows={5}
-          placeholder="Describe what you're building, the problem you're solving, and any reference sites you love..."
+          placeholder="Elaborate on operational features, targeted milestones, timeline pressures, or design architectures you hold in high regard..."
           hasError={!!errors.brief}
         />
         <FieldError message={errors.brief?.message} />
       </div>
 
-      {/* ── Referral ── */}
+      {/* Referral Optimization Selection */}
       <div>
-        <FieldLabel>How did you find us?</FieldLabel>
+        <FieldLabel>Discovery Vector</FieldLabel>
         <StyledSelect
           {...register('referral')}
-          value={watchedReferral ?? ''}
+          value={watchedReferral || ''}
         >
-          <option value="">Select (optional)</option>
-          {REFERRAL_SOURCES.map((source) => (
-            <option key={source} value={source}>
-              {source}
-            </option>
+          <option value="">Select Discovery Point (Optional)</option>
+          {REFERRAL_SOURCES.map((src) => (
+            <option key={src} value={src}>{src}</option>
           ))}
         </StyledSelect>
       </div>
 
-      {/* ── Submit button ── */}
+      {/* Premium Active CTA Node */}
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-semibold text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-0"
-        style={{
-          backgroundColor: isSubmitting ? '#5A3FD4' : '#7C5BFF',
-          opacity: isSubmitting ? 0.75 : 1,
-          cursor: isSubmitting ? 'not-allowed' : 'pointer',
-        }}
-        onMouseEnter={(e) => {
-          if (!isSubmitting) {
-            e.currentTarget.style.backgroundColor = '#9B7FFF'
-            e.currentTarget.style.boxShadow =
-              '0 8px 30px rgba(124,91,255,0.45)'
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = isSubmitting
-            ? '#5A3FD4'
-            : '#7C5BFF'
-          e.currentTarget.style.boxShadow = 'none'
-        }}
+        className="w-full relative flex items-center justify-center gap-2 py-4 rounded-xl text-white font-semibold text-sm transition-all duration-300 bg-[#7C5BFF] hover:bg-[#9B7FFF] disabled:bg-[#5A3FD4] disabled:opacity-60 disabled:cursor-not-allowed hover:shadow-[0_8px_32px_rgba(124,91,255,0.35)] outline-none"
       >
         {isSubmitting ? (
           <>
             <Loader2 size={16} className="animate-spin" />
-            Sending your brief...
+            Transmitting Structural Metrics...
           </>
         ) : (
           <>
-            Send Project Brief
+            Dispatch Project Specifications
             <ArrowUpRight size={15} />
           </>
         )}
       </button>
 
-      {/* ── Submit error ── */}
+      {/* Dynamic Error Messaging Dropdown */}
       <AnimatePresence>
         {submitError && (
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.25 }}
-            className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
-            style={{
-              backgroundColor: 'rgba(255,77,109,0.1)',
-              border: '1px solid rgba(255,77,109,0.3)',
-              color: '#FF4D6D',
-            }}
+            className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm bg-[#FF4D6D]/10 border border-[#FF4D6D]/20 text-[#FF4D6D]"
           >
             <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
             <span>{submitError}</span>
@@ -589,167 +479,137 @@ function ContactForm() {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Complete Global Page Layout View ──────────────────────────────────────────
 
 export default function ContactPage() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  
+  // High-end ambient tracking for custom spotlight matrix overlays
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
+  const glowX = useSpring(useTransform(mouseX, [-0.5, 0.5], ['0%', '100%']), { damping: 35, stiffness: 180 })
+  const glowY = useSpring(useTransform(mouseY, [-0.5, 0.5], ['0%', '100%']), { damping: 35, stiffness: 180 })
+
+  const handleGlobalMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    mouseX.set((e.clientX - rect.left) / rect.width - 0.5)
+    mouseY.set((e.clientY - rect.top) / rect.height - 0.5)
+  }
+
   return (
     <main
-      className="min-h-screen"
-      style={{
-        backgroundColor: '#05050A',
-        paddingTop: '7rem',
-        paddingBottom: '6rem',
-      }}
+      ref={containerRef}
+      onMouseMove={handleGlobalMouseMove}
+      className="relative min-h-screen bg-[#05050A] pt-28 pb-24 overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+      {/* Cinematic Studio Backdrop Matrix Lines */}
+      <div className="absolute inset-0 bg-mesh-violet opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 bg-mesh-cyan opacity-20 pointer-events-none" />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
+          backgroundSize: '50px 50px',
+        }}
+      />
 
-          {/* ── Left: Info column ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <span
-              className="font-mono text-xs uppercase tracking-[0.15em]"
-              style={{ color: '#00D4FF' }}
-            >
-              // GET IN TOUCH
-            </span>
+      {/* Interactive Global Mouse Follower Overlay Glow */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-0 opacity-40"
+        style={{
+          background: `radial-gradient(1000px circle at ${glowX.get()} ${glowY.get()}, rgba(124, 91, 255, 0.08), transparent 50%)`,
+        }}
+      />
 
-            <h1
-              className="font-bold tracking-tight mt-3 mb-5 leading-tight"
-              style={{
-                color: '#FFFFFF',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-              }}
-            >
-              Let&apos;s build something remarkable.
-            </h1>
+      <div className="relative z-10 max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-16 items-start">
+        
+        {/* Left Informational Desk Area */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-mono tracking-widest text-[#00D4FF] uppercase bg-[#00D4FF]/5 border border-[#00D4FF]/10">
+            <Sparkles size={10} className="animate-pulse" />
+            Establish Node Connection
+          </span>
 
-            <p
-              className="text-base leading-relaxed mb-10 max-w-md"
-              style={{ color: '#C8C8D8' }}
-            >
-              Whether you have a polished brief, a rough idea, or just a budget
-              — we&apos;ll help you figure out the rest. Most projects kick off
-              within 72 hours of your first message.
-            </p>
+          <h1 className="font-bold tracking-tight text-white mt-4 mb-6 leading-[1.1] text-4xl sm:text-5xl">
+            Let&apos;s engineer something remarkable.
+          </h1>
 
-            {/* Info cards */}
-            <div className="space-y-3 mb-10">
-              {INFO_CARDS.map(({ Icon, label, value, href, accent }) => {
-                const inner = (
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${accent}18` }}
-                    >
-                      <Icon size={17} style={{ color: accent }} />
-                    </div>
-                    <div>
-                      <p
-                        className="font-mono text-xs mb-0.5"
-                        style={{ color: '#7A7A94' }}
-                      >
-                        {label}
-                      </p>
-                      <p className="text-sm font-medium" style={{ color: '#FFFFFF' }}>
-                        {value}
-                      </p>
-                    </div>
-                  </div>
-                )
+          <p className="text-base text-[#C8C8D8] leading-relaxed mb-10 max-w-md">
+            Whether your operational framework holds a finalized spec sheet, raw logic metrics, or general budget considerations — we establish optimal pathways. Initial pipelines activate within 72 hours of structural sync.
+          </p>
 
-                const cardStyle: React.CSSProperties = {
-                  backgroundColor: '#1A1A24',
-                  border: '1px solid rgba(58,58,78,0.6)',
-                  borderRadius: '0.875rem',
-                  padding: '1rem',
-                  display: 'block',
-                  textDecoration: 'none',
-                  width: '100%',
-                }
-
-                return href ? (
-                  <a
-                    key={label}
-                    href={href}
-                    style={cardStyle}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = `${accent}50`
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor =
-                        'rgba(58,58,78,0.6)'
-                    }}
+          {/* Premium Core Context Cards */}
+          <div className="space-y-3 mb-10">
+            {INFO_CARDS.map(({ Icon, label, value, href, accent }) => {
+              const insideNode = (
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${accent}12`, border: `1px solid ${accent}20` }}
                   >
-                    {inner}
-                  </a>
-                ) : (
-                  <div key={label} style={cardStyle}>
-                    {inner}
+                    <Icon size={16} style={{ color: accent }} />
                   </div>
-                )
-              })}
-            </div>
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-wider text-[#7A7A94] mb-0.5">{label}</p>
+                    <p className="text-sm font-medium text-white">{value}</p>
+                  </div>
+                </div>
+              )
 
-            {/* Social links */}
-            <div className="flex items-center gap-3">
-              {SOCIAL_LINKS.map(({ Icon, href, label }) => (
+              const templateClass = "block p-4 rounded-xl bg-[#111118] border border-white/5 transition-all duration-300"
+
+              return href ? (
                 <a
                   key={label}
                   href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 focus:outline-none"
-                  style={{
-                    backgroundColor: '#1A1A24',
-                    border: '1px solid rgba(58,58,78,0.6)',
-                    color: '#7A7A94',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#7C5BFF'
-                    e.currentTarget.style.borderColor =
-                      'rgba(124,91,255,0.5)'
-                    e.currentTarget.style.backgroundColor = '#22222E'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#7A7A94'
-                    e.currentTarget.style.borderColor =
-                      'rgba(58,58,78,0.6)'
-                    e.currentTarget.style.backgroundColor = '#1A1A24'
-                  }}
+                  className={`${templateClass} hover:border-[#7C5BFF]/30`}
                 >
-                  <Icon size={16} />
+                  {insideNode}
                 </a>
-              ))}
-            </div>
-          </motion.div>
+              ) : (
+                <div key={label} className={templateClass}>
+                  {insideNode}
+                </div>
+              )
+            })}
+          </div>
 
-          {/* ── Right: Form card ── */}
-          <motion.div
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-            style={{
-              backgroundColor: '#111118',
-              border: '1px solid rgba(58,58,78,0.5)',
-              borderRadius: '1.25rem',
-              padding: '2rem',
-            }}
-          >
-            <h2
-              className="font-semibold text-xl mb-6"
-              style={{ color: '#FFFFFF' }}
-            >
-              Tell us about your project
-            </h2>
-            <ContactForm />
-          </motion.div>
+          {/* Connected Network Channels */}
+          <div className="flex items-center gap-3">
+            {SOCIAL_LINKS.map(({ Icon, href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#111118] border border-white/5 text-[#7A7A94] hover:text-[#7C5BFF] hover:border-[#7C5BFF]/30 hover:bg-[#141420] transition-all duration-300"
+              >
+                <Icon size={16} />
+              </a>
+            ))}
+          </div>
+        </motion.div>
 
-        </div>
+        {/* Right Structural Form Block */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
+          className="bg-[#111118]/90 backdrop-blur-md border border-white/5 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.4)]"
+        >
+          <h2 className="font-semibold text-lg text-white mb-6 tracking-tight flex items-center gap-2">
+            Scope Specification Matrix
+          </h2>
+          <ContactForm />
+        </motion.div>
+
       </div>
     </main>
   )
