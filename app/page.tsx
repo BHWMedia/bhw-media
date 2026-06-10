@@ -3,6 +3,7 @@ import { TestimonialsCarousel } from '@/components/TestimonialsCarousel'
 import { HeroSection } from '@/components/HeroSection'
 import { LogoMarquee } from '@/components/LogoMarquee'
 import { StatsBanner } from '@/components/StatsBanner'
+import { ValidationsBar } from '@/components/ValidationsBar'
 import { ProcessSection } from '@/components/ProcessSection'
 import { CtaBanner } from '@/components/CtaBanner'
 
@@ -26,6 +27,10 @@ export default function HomePage() {
       </section>
 
       <StatsBanner />
+      
+      {/* Step 8 Core Component Integration */}
+      <ValidationsBar />
+      
       <ProcessSection />
 
       {/* Testimonials */}

@@ -2,11 +2,7 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { z } from 'zod'
 
-// Initialize Resend Client securely with server-validated environment vectors
-const resend = new Resend(process.env.RESEND_API_KEY)
-
-// ─── STRICT TRANS-VALIDATION SCHEMA ──────────────────────────────────────────
-
+// ─── Validation schema (Strict alignment with client requirements) ────────────
 const contactSchema = z.object({
   name: z
     .string()
@@ -14,85 +10,52 @@ const contactSchema = z.object({
     .max(80, 'Name too long'),
   email: z
     .string()
-    .email('Invalid email protocol structure'),
+    .email('Invalid email'),
   company: z.string().max(100).optional(),
-  projectType: z.string().min(1, 'Project type vector required'),
-  budget: z.string().min(1, 'Budget metric required'),
+  projectType: z.string().min(1, 'Project type required'),
+  budget: z.string().min(1, 'Budget required'),
   brief: z
     .string()
-    .min(30, 'Brief information density too short')
-    .max(2000, 'Brief information density exceeded limit'),
+    .min(30, 'Brief too short')
+    .max(2000, 'Brief too long'),
   referral: z.string().optional(),
 })
 
-// ─── HIGH FIDELITY SECURITY SANITIZATION NODE ─────────────────────────────────
-
-/**
- * Escapes hazardous characters to completely prevent HTML Injection vulnerabilities
- */
-function sanitizeInput(str: string): string {
-  if (!str) return '—'
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
-}
-
-// ─── PREMIUM BRAND HTML DESIGN ARCHITECTURE ──────────────────────────────────
-
-function buildEmailHtml(rawData: z.infer<typeof contactSchema>): string {
-  // Sanitize all elements cleanly prior to building production template layout
-  const data = {
-    name: sanitizeInput(rawData.name),
-    email: sanitizeInput(rawData.email),
-    company: rawData.company ? sanitizeInput(rawData.company) : '—',
-    projectType: sanitizeInput(rawData.projectType),
-    budget: sanitizeInput(rawData.budget),
-    brief: sanitizeInput(rawData.brief),
-    referral: rawData.referral ? sanitizeInput(rawData.referral) : 'Not specified',
-  }
-
-  const renderDataRow = (label: string, value: string, isAccent = false) => `
+// ─── Transactional HTML Template Builder ──────────────────────────────────────
+function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
+  const row = (label: string, value: string, isAccent = false) => `
     <tr>
       <td style="
-        padding: 14px 0;
-        border-bottom: 1px solid rgba(58, 58, 78, 0.3);
+        padding: 11px 0;
+        border-bottom: 1px solid #2A2A3A;
         color: #7A7A94;
-        font-size: 11px;
-        font-family: 'Courier New', Courier, monospace;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        width: 150px;
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
+        width: 140px;
         vertical-align: top;
-      ">${label}</td>
+      ;">${label}</td>
       <td style="
-        padding: 14px 0;
-        border-bottom: 1px solid rgba(58, 58, 78, 0.3);
+        padding: 11px 0;
+        border-bottom: 1px solid #2A2A3A;
         color: ${isAccent ? '#7C5BFF' : '#FFFFFF'};
-        font-size: 14px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 13px;
         font-weight: ${isAccent ? '600' : '400'};
         vertical-align: top;
-        line-height: 1.5;
-      ">${value}</td>
+      ;">${value}</td>
     </tr>
   `
 
-  const renderBadge = (text: string, bg: string, color: string) => `
+  const badge = (text: string, bg: string, color: string) => `
     <span style="
-      background-color: ${bg};
+      background: ${bg};
       color: ${color};
-      padding: 4px 14px;
-      border-radius: 8px;
+      padding: 3px 12px;
+      border-radius: 999px;
       font-size: 11px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Courier New', monospace;
       font-weight: 600;
-      letter-spacing: 0.02em;
       display: inline-block;
-    ">${text}</span>
+    ;">${text}</span>
   `
 
   return `
@@ -101,173 +64,166 @@ function buildEmailHtml(rawData: z.infer<typeof contactSchema>): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Synchronization Core Brief — BHW Media</title>
+  <title>New Project Brief — BHW Media</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #05050A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+<body style="margin: 0; padding: 0; background-color: #05050A; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
 
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #05050A; padding: 40px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
     <tr>
       <td>
         <table
           width="600"
-          cellpadding="0"
+          padding="0"
           cellspacing="0"
           align="center"
           style="
             max-width: 600px;
             width: 100%;
             background-color: #111118;
-            border-radius: 20px;
-            border: 1px solid rgba(58, 58, 78, 0.5);
+            border-radius: 16px;
+            border: 1px solid #2A2A3A;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
           "
         >
-
           <tr>
             <td style="
-              padding: 36px 40px 32px;
-              border-bottom: 1px solid rgba(58, 58, 78, 0.5);
-              background: linear-gradient(135deg, rgba(124, 91, 255, 0.15) 0%, rgba(0, 212, 255, 0.05) 100%);
+              padding: 28px 32px 24px;
+              border-bottom: 1px solid #2A2A3A;
+              background: linear-gradient(135deg, rgba(124,91,255,0.12) 0%, rgba(0,212,255,0.06) 100%);
             ">
               <p style="
                 margin: 0 0 6px;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 11px;
-                letter-spacing: 0.2em;
+                font-family: 'Courier New', monospace;
+                font-size: 10px;
+                letter-spacing: 0.15em;
                 text-transform: uppercase;
                 color: #00D4FF;
-                font-weight: bold;
-              ">// SPECIFICATION METRICS OVERLAY</p>
-              <h1 style="
-                margin: 0 0 6px;
-                font-size: 26px;
-                font-weight: 800;
+              ">// NEW PROJECT BRIEF</p>
+              <p style="
+                margin: 0 0 4px;
+                font-size: 22px;
+                font-weight: 700;
                 color: #FFFFFF;
-                letter-spacing: -0.03em;
-              ">BHW Media Intake</h1>
+                letter-spacing: -0.5px;
+              ">BHW Media</p>
               <p style="
                 margin: 0;
-                font-size: 13px;
+                font-size: 12px;
                 color: #7A7A94;
-                line-height: 1.4;
-              ">A new operational request has been routed through your production network desk.</p>
+              ">A new enquiry has been submitted via bhwmedia.co</p>
             </td>
           </tr>
 
           <tr>
-            <td style="padding: 32px 40px 16px;">
+            <td style="padding: 24px 32px;">
               <table width="100%" cellpadding="0" cellspacing="0">
-                ${renderDataRow('Identity Node', data.name)}
-                ${renderDataRow('Comms Channel', `<a href="mailto:${rawData.email}" style="color: #00D4FF; text-decoration: none; border-bottom: 1px dashed rgba(0, 212, 255, 0.4);">${data.email}</a>`)}
-                ${renderDataRow('Corporate Unit', data.company)}
+                ${row('Name', data.name)}
+                ${row('Email', `<a href="mailto:${data.email}" style="color: #00D4FF; text-decoration: none;">${data.email}</a>`)}
+                ${row('Company', data.company ?? '—')}
                 <tr>
                   <td style="
-                    padding: 14px 0;
-                    border-bottom: 1px solid rgba(58, 58, 78, 0.3);
+                    padding: 11px 0;
+                    border-bottom: 1px solid #2A2A3A;
                     color: #7A7A94;
-                    font-size: 11px;
-                    font-family: 'Courier New', Courier, monospace;
-                    text-transform: uppercase;
-                    letter-spacing: 0.1em;
-                    width: 150px;
+                    font-size: 12px;
+                    font-family: 'Courier New', monospace;
+                    width: 140px;
                     vertical-align: top;
-                  ">Target Vector</td>
-                  <td style="padding: 14px 0; border-bottom: 1px solid rgba(58, 58, 78, 0.3); vertical-align: top;">
-                    ${renderBadge(data.projectType, 'rgba(124, 91, 255, 0.12)', '#9B7FFF')}
+                  ">Project type</td>
+                  <td style="
+                    padding: 11px 0;
+                    border-bottom: 1px solid #2A2A3A;
+                    vertical-align: top;
+                  ">
+                    ${badge(data.projectType, 'rgba(124,91,255,0.2)', '#9B7FFF')}
                   </td>
                 </tr>
                 <tr>
                   <td style="
-                    padding: 14px 0;
-                    border-bottom: 1px solid rgba(58, 58, 78, 0.3);
+                    padding: 11px 0;
+                    border-bottom: 1px solid #2A2A3A;
                     color: #7A7A94;
-                    font-size: 11px;
-                    font-family: 'Courier New', Courier, monospace;
-                    text-transform: uppercase;
-                    letter-spacing: 0.1em;
-                    width: 150px;
+                    font-size: 12px;
+                    font-family: 'Courier New', monospace;
+                    width: 140px;
                     vertical-align: top;
-                  ">Budget Scope</td>
-                  <td style="padding: 14px 0; border-bottom: 1px solid rgba(58, 58, 78, 0.3); vertical-align: top;">
-                    ${renderBadge(data.budget, 'rgba(0, 212, 255, 0.1)', '#00D4FF')}
+                  ">Budget</td>
+                  <td style="
+                    padding: 11px 0;
+                    border-bottom: 1px solid #2A2A3A;
+                    vertical-align: top;
+                  ">
+                    ${badge(data.budget, 'rgba(245,166,35,0.18)', '#F5A623')}
                   </td>
                 </tr>
-                ${renderDataRow('Discovery Source', data.referral)}
+                ${row('Found via', data.referral ?? '—')}
               </table>
             </td>
           </tr>
 
           <tr>
-            <td style="padding: 16px 40px 32px;">
+            <td style="padding: 0 32px 28px;">
               <div style="
-                background-color: #161622;
-                border: 1px solid rgba(58, 58, 78, 0.4);
+                background-color: #1A1A24;
+                border: 1px solid #2A2A3A;
                 border-radius: 12px;
-                padding: 24px;
+                padding: 20px;
               ">
                 <p style="
-                  margin: 0 0 12px;
-                  font-family: 'Courier New', Courier, monospace;
-                  font-size: 11px;
-                  letter-spacing: 0.15em;
+                  margin: 0 0 10px;
+                  font-family: 'Courier New', monospace;
+                  font-size: 10px;
+                  letter-spacing: 0.1em;
                   text-transform: uppercase;
                   color: #7A7A94;
-                  font-weight: bold;
-                ">PROJECT CONFIGURATION SPECS</p>
+                ">Project Brief</p>
                 <p style="
                   margin: 0;
                   font-size: 14px;
-                  line-height: 1.8;
+                  line-height: 1.75;
                   color: #C8C8D8;
                   white-space: pre-wrap;
                   word-break: break-word;
-                ">${data.brief}</p>
+                ">${data.brief.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
               </div>
             </td>
           </tr>
 
           <tr>
-            <td style="padding: 0 40px 40px; text-align: center;">
+            <td style="padding: 0 32px 32px; text-align: center;">
               <a
-                href="mailto:${rawData.email}?subject=Re: Your BHW Media Project Enquiry"
+                href="mailto:${data.email}?subject=Re%3A%20Your%20BHW%20Media%20enquiry"
                 style="
                   display: inline-block;
                   background-color: #7C5BFF;
                   color: #FFFFFF;
                   text-decoration: none;
-                  padding: 15px 36px;
-                  border-radius: 12px;
+                  padding: 13px 32px;
+                  border-radius: 999px;
                   font-size: 14px;
                   font-weight: 600;
-                  letter-spacing: 0.02em;
-                  box-shadow: 0 8px 24px rgba(124, 91, 255, 0.25);
+                  letter-spacing: 0.01em;
                 "
-              >
-                Initiate Project Channels &rarr;
-              </a>
+              >Reply to ${data.name} &#8594;</a>
             </td>
           </tr>
 
           <tr>
             <td style="
-              padding: 20px 40px;
-              border-top: 1px solid rgba(58, 58, 78, 0.5);
-              background-color: #0D0D13;
+              padding: 16px 32px;
+              border-top: 1px solid #2A2A3A;
               text-align: center;
             ">
               <p style="
                 margin: 0;
                 font-size: 11px;
-                color: #5A5A78;
-                font-family: 'Courier New', Courier, monospace;
-                letter-spacing: 0.02em;
+                color: #3A3A4E;
+                font-family: 'Courier New', monospace;
               ">
-                BHW Media Platform Nodes &nbsp;&middot;&nbsp; mediabhw@gmail.com
+                BHW Media &nbsp;&middot;&nbsp; mediabhw@gmail.com &nbsp;&middot;&nbsp; instagram.com/media._bhw
               </p>
             </td>
           </tr>
-
         </table>
       </td>
     </tr>
@@ -278,90 +234,89 @@ function buildEmailHtml(rawData: z.infer<typeof contactSchema>): string {
   `.trim()
 }
 
-// ─── TRANS-FLOW ROUTE ENGINE INTERFACE ────────────────────────────────────────
-
+// ─── Core POST API Edge Route Handler ─────────────────────────────────────────
 export async function POST(request: Request): Promise<NextResponse> {
-  // 1. Structural parser phase
+  // 1. JSON Payload Deserialization Parsing Guard
   let body: unknown
   try {
     body = await request.json()
   } catch {
     return NextResponse.json(
-      { error: 'Invalid payload execution — matrix expected JSON context' },
-      { status: 400 }
+      { error: 'Invalid request body — expected JSON' },
+      { status: 400 },
     )
   }
 
-  // 2. Strict type assertion layer via Zod engine
+  // 2. Strict Runtime Schema Assertion
   const parsed = contactSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
       {
-        error: 'Validation operations failed metrics verification',
+        error: 'Validation failed',
         details: parsed.error.flatten().fieldErrors,
       },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
-  const validData = parsed.data
+  const data = parsed.data
 
-  // 3. Environment protection guard verification
+  // 3. System Configuration Injection Safeguard
   if (!process.env.RESEND_API_KEY) {
-    console.error('[BHW Node Crash] CRITICAL: RESEND_API_KEY environment vector missing.')
+    console.error('[BHW Contact] RESEND_API_KEY is missing from environment keys.')
     return NextResponse.json(
-      { error: 'System architecture setup fault' },
-      { status: 500 }
+      { error: 'Server configuration error' },
+      { status: 500 },
     )
   }
 
-  // 4. Dispatch transaction payload processing
+  // Safely initialize instance within transaction context
+  const resend = new Resend(process.env.RESEND_API_KEY)
+
+  // 4. Primary Gateway: Resend Email Relay Dispatch
   try {
     const { error } = await resend.emails.send({
-      // NOTE: Update to custom domain 'BHW Media <hello@bhwmedia.co>' inside Resend configurations once domains resolve.
       from: 'BHW Media <onboarding@resend.dev>',
       to: ['mediabhw@gmail.com'],
-      replyTo: validData.email,
-      subject: `[Brief Sync] ${validData.projectType} — ${validData.name}`,
-      html: buildEmailHtml(validData),
+      replyTo: data.email,
+      subject: `New brief: ${data.projectType} — ${data.name}`,
+      html: buildEmailHtml(data),
     })
 
     if (error) {
-      console.error('[BHW Mail Failure] Resend Engine feedback:', error)
+      console.error('[BHW Contact] Resend Relay Error:', error)
       return NextResponse.json(
-        { error: 'Communication relay refused network allocation — please retry' },
-        { status: 502 }
+        { error: 'Failed to send email — please try again' },
+        { status: 502 },
       )
     }
 
-    // 5. CRM WEBHOOK REVENUE PIPELINE (Non-blocking execution)
-    const MAKE_WEBHOOK_URL = process.env.MAKE_CRM_WEBHOOK_URL
-    if (MAKE_WEBHOOK_URL) {
-      fetch(MAKE_WEBHOOK_URL, {
+    // 5. Secondary Pipeline Execution: Make.com CRM Webhook Sync (Async/Non-Blocking)
+    if (process.env.MAKE_CRM_WEBHOOK_URL) {
+      fetch(process.env.MAKE_CRM_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...validData,
-          leadSource: 'BHW Main Intake Matrix',
-          timestamp: new Date().toISOString()
-        })
-      }).catch(err => console.error('[BHW CRM Pipeline Error]:', err))
+          ...data,
+          source: 'BHW Media Production Main Web Intake',
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch((err) => {
+        console.error('[BHW Contact] Secondary CRM Sync Failed:', err)
+      })
     }
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (err) {
-    console.error('[BHW System Failure] Crash unexpected trace:', err)
+    console.error('[BHW Contact] Unexpected System Exception Framework:', err)
     return NextResponse.json(
-      { error: 'Unexpected operations kernel exception' },
-      { status: 500 }
+      { error: 'Unexpected internal server error' },
+      { status: 500 },
     )
   }
 }
 
-// Lock all secondary methods with explicit status response codes
+// ─── Network Block Parameters ──────────────────────────────────────────────────
 export async function GET(): Promise<NextResponse> {
-  return NextResponse.json(
-    { error: 'Method operation vector not allowed on this node channel' },
-    { status: 405 }
-  )
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
 }

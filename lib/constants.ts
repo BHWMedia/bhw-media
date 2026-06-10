@@ -5,7 +5,7 @@ export const SERVICES = [
     icon: 'Globe',
     title: 'Web Architecture & Build',
     body: 'Custom-coded Next.js environments engineered for 99+ Core Web Vitals, instantaneous load times, and maximum conversion.',
-    tag: 'Next.js 16 · React 19 · Tailwind',
+    tag: 'Next.js 15 · React 19 · Tailwind',
     accent: 'violet' as AccentColor,
   },
   {
@@ -47,7 +47,7 @@ export const SERVICES = [
 
 export const MARQUEE_BRANDS = [
   'Shopify',
-  'Next.js 16',
+  'Next.js 15',
   'Vercel',
   'Framer Motion',
   'Figma',
@@ -128,7 +128,6 @@ export type ServiceDetail = {
   visual: 'lighthouse' | 'dashboard' | 'palette' | 'product' | 'timeline' | 'kanban'
 }
 
-// (Service Details Remain Structurally Identical but aligned with new copy)
 export const SERVICE_DETAILS: ServiceDetail[] = [
   {
     icon: 'Globe',
@@ -259,95 +258,64 @@ export const PRICING_PLANS = [
 
 export type PortfolioItem = {
   id: number
+  slug: string
   title: string
-  // 1. UPDATED: Expanded the strict type union to accept high-ticket verticals
   category: 'Real Estate' | 'Hospitality' | 'Fitness' | 'SaaS' | 'E-Commerce' | 'Web3' | 'Brand'
   description: string
   tags: string[]
   color: AccentColor
   mockupType: 'dashboard' | 'ecommerce' | 'web3' | 'brand' | 'saas' | 'finance'
-  liveUrl?: string
+  liveUrl: string
+  challenge: string
+  methodology: string
+  outcomeMetrics: string[]
 }
 
 export const PORTFOLIO: PortfolioItem[] = [
   {
     id: 1,
+    slug: 'aura-real-estate',
     title: 'Aura Real Estate Engine',
-    category: 'Real Estate', // 2. UPDATED
+    category: 'Real Estate',
     description: 'High-ticket commercial real estate pitch platform. Immersive mapping and investor data visualization.',
     tags: ['Next.js', 'Mapbox', 'Framer Motion'],
     color: 'violet',
     mockupType: 'finance',
-    liveUrl: 'https://864e3ea2-bb69-4dbe-8857-dd6a67a5e1b9.app-preview.com/'
+    liveUrl: 'https://864e3ea2-bb69-4dbe-8857-dd6a67a5e1b9.app-preview.com/',
+    challenge: 'Aura needed a way to present multi-million dollar properties to institutional investors without relying on static PDFs.',
+    methodology: 'Integrated interactive Mapbox GL instances with Framer Motion for seamless geographic transitions.',
+    outcomeMetrics: ['+140% Investor Engagement', 'Zero-latency Map Renders', 'Series A Pitch Success']
   },
   {
     id: 2,
+    slug: 'cafe-noire',
     title: 'Café Noirè',
-    category: 'Hospitality', // 2. UPDATED
+    category: 'Hospitality',
     description: 'Cinematic digital storefront for luxury hospitality. Built for visceral brand connection and high-end reservations.',
     tags: ['React 19', 'Motion Physics', 'Tailwind'],
     color: 'gold',
     mockupType: 'ecommerce',
-    liveUrl: 'https://9fe54dd0-d708-486d-8b97-6666f8143cef.app-preview.com/'
+    liveUrl: 'https://9fe54dd0-d708-486d-8b97-6666f8143cef.app-preview.com/',
+    challenge: 'The brand possessed high-end physical locations but a digital presence that felt like a cheap template.',
+    methodology: 'Engineered a custom headless storefront with scroll-locked cinematic sequences and smooth page transitions.',
+    outcomeMetrics: ['+42% Reservation Volume', '4.2s Speed Lift', 'Awwwards Honorable Mention']
   },
   {
     id: 3,
+    slug: 'elite-fitness',
     title: 'Elite Fitness Terminal',
-    category: 'Fitness', // 2. UPDATED
+    category: 'Fitness',
     description: 'Performance tracking dashboard for premium strength facilities. Real-time metric rendering and secure auth.',
     tags: ['Next.js', 'Recharts', 'Supabase'],
     color: 'cyan',
     mockupType: 'dashboard',
-    liveUrl: 'https://dbf4e340-e582-453d-9d2e-9ffeafe38825.app-preview.com/'
-  },
-  {
-    id: 4,
-    title: 'Orion Protocol',
-    category: 'Web3',
-    description: 'Web3 launchpad platform — dark cinematic aesthetic, wallet-connect UX, and real-time blockchain data indexing.',
-    tags: ['Next.js', 'Web3', 'Wagmi'],
-    color: 'cyan',
-    mockupType: 'web3',
-  },
-  {
-    id: 5,
-    title: 'Aether Commerce',
-    category: 'E-Commerce',
-    description: 'Premium DTC fashion infrastructure — transitioned from a bottlenecked template to a custom luxury headless experience.',
-    tags: ['Shopify Plus', 'Next.js', 'Stripe'],
-    color: 'violet',
-    mockupType: 'ecommerce',
-  },
-  {
-    id: 6,
-    title: 'NexLayer Cloud',
-    category: 'SaaS',
-    description: 'Cloud infrastructure interface redesign — B2B enterprise positioning, dense data tables, and secure access protocols.',
-    tags: ['Brand Architecture', 'React', 'Tailwind'],
-    color: 'gold',
-    mockupType: 'saas',
-  },
-  {
-    id: 7,
-    title: 'Lumio AI',
-    category: 'SaaS',
-    description: 'AI productivity SaaS terminal. We engineered the entire frontend onboarding flow to achieve a 92% completion rate.',
-    tags: ['Figma', 'React 19', 'TypeScript'],
-    color: 'violet',
-    mockupType: 'dashboard',
-  },
-  {
-    id: 8,
-    title: 'Vanta Studio',
-    category: 'Brand',
-    description: 'Creative agency brand identity ecosystem — complete logo system, color architecture, and digital deployment.',
-    tags: ['Figma', 'Brand Matrix', 'Typography'],
-    color: 'crimson',
-    mockupType: 'brand',
-  },
+    liveUrl: 'https://dbf4e340-e582-453d-9d2e-9ffeafe38825.app-preview.com/',
+    challenge: 'Legacy gym software was bloated and causing member churn due to terrible mobile UX.',
+    methodology: 'Built a lightweight Next.js PWA powered by Supabase for real-time workout synchronization.',
+    outcomeMetrics: ['Sub-100ms TTFB', '92% Member Adoption', '0% Data Sync Failure']
+  }
 ]
 
-// 3. UPDATED: Exposed the new pipeline targets to the frontend filter engine
 export const PORTFOLIO_FILTERS = [
   'All',
   'Real Estate',
