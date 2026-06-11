@@ -1,8 +1,10 @@
+// app/api/contact/route.ts
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { z } from 'zod'
 
-// ─── Validation schema (Strict alignment with client requirements) ────────────
+// ─── Validation Schema ────────────────────────────────────────────────────────
+
 const contactSchema = z.object({
   name: z
     .string()
@@ -16,13 +18,21 @@ const contactSchema = z.object({
   budget: z.string().min(1, 'Budget required'),
   brief: z
     .string()
-    .min(30, 'Brief too short')
+    .min(10, 'Brief too short') // Lowered from 30 to prevent blocking programmatic wizard templates
     .max(2000, 'Brief too long'),
   referral: z.string().optional(),
+  websiteUrl: z.string().optional(),
+  painPoint: z.enum(['speed', 'conversion', 'ui']).optional(),
+  source: z.string().optional(),
 })
 
-// ─── Transactional HTML Template Builder ──────────────────────────────────────
-function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
+type ContactPayload = z.infer<typeof contactSchema>
+
+// ─── HTML Email Template Builder ─────────────────────────────────────────────
+
+function buildEmailHtml(data: ContactPayload): string {
+  const isAuditRequest = data.source === 'AuditWizard'
+
   const row = (label: string, value: string, isAccent = false) => `
     <tr>
       <td style="
@@ -58,16 +68,43 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
     ;">${text}</span>
   `
 
+  const auditMetaBlock = isAuditRequest && data.websiteUrl
+    ? `
+      <tr>
+        <td colspan="2" style="padding: 14px 0 2px;">
+          <div style="
+            background: rgba(0,212,255,0.06);
+            border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 10px;
+            padding: 14px 16px;
+          ;">
+            <p style="
+              margin: 0 0 8px;
+              font-family: 'Courier New', monospace;
+              font-size: 10px;
+              letter-spacing: 0.1em;
+              text-transform: uppercase;
+              color: #00D4FF;
+            ;">// Audit Request Metadata</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${row('Website URL', `<a href="${data.websiteUrl}" style="color: #00D4FF; text-decoration: none;">${data.websiteUrl}</a>`)}
+              ${data.painPoint ? row('Pain Point', data.painPoint === 'speed' ? 'Core Web Vitals / Speed' : data.painPoint === 'conversion' ? 'Low Conversion Rates' : 'Outdated Layout / UI') : ''}
+            </table>
+          </div>
+        </td>
+      </tr>
+    `
+    : ''
+
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>New Project Brief — BHW Media</title>
+  <title>${isAuditRequest ? 'Free Audit Request' : 'New Project Brief'} — BHW Media</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #05050A; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-
   <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
     <tr>
       <td>
@@ -90,27 +127,27 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
               padding: 28px 32px 24px;
               border-bottom: 1px solid #2A2A3A;
               background: linear-gradient(135deg, rgba(124,91,255,0.12) 0%, rgba(0,212,255,0.06) 100%);
-            ">
+            ;">
               <p style="
                 margin: 0 0 6px;
                 font-family: 'Courier New', monospace;
                 font-size: 10px;
                 letter-spacing: 0.15em;
                 text-transform: uppercase;
-                color: #00D4FF;
-              ">// NEW PROJECT BRIEF</p>
+                color: ${isAuditRequest ? '#00D4FF' : '#7C5BFF'};
+              ;">${isAuditRequest ? '// FREE AUDIT REQUEST' : '// NEW PROJECT BRIEF'}</p>
               <p style="
                 margin: 0 0 4px;
                 font-size: 22px;
                 font-weight: 700;
                 color: #FFFFFF;
                 letter-spacing: -0.5px;
-              ">BHW Media</p>
+              ;">BHW Media</p>
               <p style="
                 margin: 0;
                 font-size: 12px;
                 color: #7A7A94;
-              ">A new enquiry has been submitted via bhwmedia.co</p>
+              ;">${isAuditRequest ? 'A free audit has been requested via bhw-media.vercel.app/audit' : 'A new enquiry has been submitted via bhw-media.vercel.app/contact'}</p>
             </td>
           </tr>
 
@@ -129,12 +166,8 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
                     font-family: 'Courier New', monospace;
                     width: 140px;
                     vertical-align: top;
-                  ">Project type</td>
-                  <td style="
-                    padding: 11px 0;
-                    border-bottom: 1px solid #2A2A3A;
-                    vertical-align: top;
-                  ">
+                  ;">Project type</td>
+                  <td style="padding: 11px 0; border-bottom: 1px solid #2A2A3A; vertical-align: top;">
                     ${badge(data.projectType, 'rgba(124,91,255,0.2)', '#9B7FFF')}
                   </td>
                 </tr>
@@ -147,16 +180,13 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
                     font-family: 'Courier New', monospace;
                     width: 140px;
                     vertical-align: top;
-                  ">Budget</td>
-                  <td style="
-                    padding: 11px 0;
-                    border-bottom: 1px solid #2A2A3A;
-                    vertical-align: top;
-                  ">
+                  ;">Budget</td>
+                  <td style="padding: 11px 0; border-bottom: 1px solid #2A2A3A; vertical-align: top;">
                     ${badge(data.budget, 'rgba(245,166,35,0.18)', '#F5A623')}
                   </td>
                 </tr>
                 ${row('Found via', data.referral ?? '—')}
+                ${auditMetaBlock}
               </table>
             </td>
           </tr>
@@ -168,7 +198,7 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
                 border: 1px solid #2A2A3A;
                 border-radius: 12px;
                 padding: 20px;
-              ">
+              ;">
                 <p style="
                   margin: 0 0 10px;
                   font-family: 'Courier New', monospace;
@@ -176,7 +206,7 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
                   letter-spacing: 0.1em;
                   text-transform: uppercase;
                   color: #7A7A94;
-                ">Project Brief</p>
+                ;">Project Brief</p>
                 <p style="
                   margin: 0;
                   font-size: 14px;
@@ -184,7 +214,7 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
                   color: #C8C8D8;
                   white-space: pre-wrap;
                   word-break: break-word;
-                ">${data.brief.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                ;">${data.brief.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
               </div>
             </td>
           </tr>
@@ -192,7 +222,7 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
           <tr>
             <td style="padding: 0 32px 32px; text-align: center;">
               <a
-                href="mailto:${data.email}?subject=Re%3A%20Your%20BHW%20Media%20enquiry"
+                href="mailto:${data.email}?subject=Re%3A%20Your%20BHW%20Media%20${isAuditRequest ? 'audit%20request' : 'enquiry'}"
                 style="
                   display: inline-block;
                   background-color: #7C5BFF;
@@ -213,13 +243,13 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
               padding: 16px 32px;
               border-top: 1px solid #2A2A3A;
               text-align: center;
-            ">
+            ;">
               <p style="
                 margin: 0;
                 font-size: 11px;
                 color: #3A3A4E;
                 font-family: 'Courier New', monospace;
-              ">
+              ;">
                 BHW Media &nbsp;&middot;&nbsp; mediabhw@gmail.com &nbsp;&middot;&nbsp; instagram.com/media._bhw
               </p>
             </td>
@@ -228,15 +258,88 @@ function buildEmailHtml(data: z.infer<typeof contactSchema>): string {
       </td>
     </tr>
   </table>
-
 </body>
 </html>
   `.trim()
 }
 
-// ─── Core POST API Edge Route Handler ─────────────────────────────────────────
+// ─── CRM Webhook Dispatcher — Isolated, Fail-Safe ─────────────────────────────
+
+async function dispatchCrmWebhook(
+  data: ContactPayload,
+  webhookUrl: string,
+): Promise<void> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 8_000)
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        ...data,
+        source: data.source ?? 'BHW Media Production Main Web Intake',
+        timestamp: new Date().toISOString(),
+      }),
+    })
+
+    if (!response.ok) {
+      console.error(
+        `[BHW CRM] Webhook returned non-200 status: ${response.status} ${response.statusText}`,
+      )
+      return
+    }
+
+    console.info('[BHW CRM] Webhook dispatch successful.')
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      console.error('[BHW CRM] Webhook timed out after 8 seconds. Lead still captured via Resend.')
+    } else {
+      console.error('[BHW CRM] Webhook dispatch failed with unexpected error:', err)
+    }
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+// ─── Fallback Resend Notification ─────────────────────────────────────────────
+
+async function dispatchFallbackNotification(
+  resend: Resend,
+  data: ContactPayload,
+): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: 'BHW Media <onboarding@resend.dev>',
+      to: ['mediabhw@gmail.com'],
+      replyTo: data.email,
+      subject: `[FALLBACK] New intake: ${data.name} — ${data.projectType}`,
+      html: `
+        <p style="font-family: monospace; color: #fff; background: #111; padding: 20px; border-radius: 8px;">
+          <strong style="color: #FF4D6D;">FALLBACK ALERT</strong><br/><br/>
+          Primary dispatch failed. Raw lead data below:<br/><br/>
+          <strong>Name:</strong> ${data.name}<br/>
+          <strong>Email:</strong> ${data.email}<br/>
+          <strong>Company:</strong> ${data.company ?? '—'}<br/>
+          <strong>Project Type:</strong> ${data.projectType}<br/>
+          <strong>Budget:</strong> ${data.budget}<br/>
+          <strong>Website:</strong> ${data.websiteUrl ?? '—'}<br/>
+          <strong>Brief:</strong><br/>
+          ${data.brief.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+        </p>
+      `,
+    })
+    console.info('[BHW Contact] Fallback notification dispatched successfully.')
+  } catch (fallbackErr) {
+    console.error('[BHW Contact] CRITICAL — Fallback notification also failed:', fallbackErr)
+    console.error('[BHW Contact] RAW LEAD DATA FOR MANUAL RECOVERY:', JSON.stringify(data))
+  }
+}
+
+// ─── POST Handler ─────────────────────────────────────────────────────────────
+
 export async function POST(request: Request): Promise<NextResponse> {
-  // 1. JSON Payload Deserialization Parsing Guard
   let body: unknown
   try {
     body = await request.json()
@@ -247,7 +350,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     )
   }
 
-  // 2. Strict Runtime Schema Assertion
   const parsed = contactSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
@@ -261,62 +363,59 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const data = parsed.data
 
-  // 3. System Configuration Injection Safeguard
   if (!process.env.RESEND_API_KEY) {
-    console.error('[BHW Contact] RESEND_API_KEY is missing from environment keys.')
+    console.error('[BHW Contact] RESEND_API_KEY is missing from environment configuration.')
     return NextResponse.json(
       { error: 'Server configuration error' },
       { status: 500 },
     )
   }
 
-  // Safely initialize instance within transaction context
   const resend = new Resend(process.env.RESEND_API_KEY)
+  let primaryDispatchSucceeded = false
 
-  // 4. Primary Gateway: Resend Email Relay Dispatch
   try {
-    const { error } = await resend.emails.send({
+    const { error: resendError } = await resend.emails.send({
       from: 'BHW Media <onboarding@resend.dev>',
       to: ['mediabhw@gmail.com'],
       replyTo: data.email,
-      subject: `New brief: ${data.projectType} — ${data.name}`,
+      subject: `${data.source === 'AuditWizard' ? '[Audit Request]' : 'New brief:'} ${data.projectType} — ${data.name}`,
       html: buildEmailHtml(data),
     })
 
-    if (error) {
-      console.error('[BHW Contact] Resend Relay Error:', error)
-      return NextResponse.json(
-        { error: 'Failed to send email — please try again' },
-        { status: 502 },
-      )
+    if (resendError) {
+      console.error('[BHW Contact] Resend primary dispatch error:', resendError)
+      await dispatchFallbackNotification(resend, data)
+    } else {
+      primaryDispatchSucceeded = true
+      console.info(`[BHW Contact] Primary dispatch successful for: ${data.email}`)
     }
-
-    // 5. Secondary Pipeline Execution: Make.com CRM Webhook Sync (Async/Non-Blocking)
-    if (process.env.MAKE_CRM_WEBHOOK_URL) {
-      fetch(process.env.MAKE_CRM_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          source: 'BHW Media Production Main Web Intake',
-          timestamp: new Date().toISOString(),
-        }),
-      }).catch((err) => {
-        console.error('[BHW Contact] Secondary CRM Sync Failed:', err)
-      })
-    }
-
-    return NextResponse.json({ success: true }, { status: 200 })
   } catch (err) {
-    console.error('[BHW Contact] Unexpected System Exception Framework:', err)
-    return NextResponse.json(
-      { error: 'Unexpected internal server error' },
-      { status: 500 },
-    )
+    console.error('[BHW Contact] Unexpected exception during primary Resend dispatch:', err)
+    await dispatchFallbackNotification(resend, data)
   }
+
+  if (process.env.MAKE_CRM_WEBHOOK_URL) {
+    dispatchCrmWebhook(data, process.env.MAKE_CRM_WEBHOOK_URL).catch((err) => {
+      console.error('[BHW Contact] Unhandled rejection from CRM dispatcher:', err)
+    })
+  } else {
+    console.warn('[BHW Contact] MAKE_CRM_WEBHOOK_URL is not set. CRM sync skipped.')
+  }
+
+  if (primaryDispatchSucceeded) {
+    return NextResponse.json({ success: true }, { status: 200 })
+  }
+
+  return NextResponse.json(
+    {
+      error:
+        'Our mail system is temporarily unavailable. Your inquiry was logged. Please email mediabhw@gmail.com directly if you need an immediate response.',
+    },
+    { status: 502 },
+  )
 }
 
-// ─── Network Block Parameters ──────────────────────────────────────────────────
 export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
 }

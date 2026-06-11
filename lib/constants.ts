@@ -81,41 +81,76 @@ export const PROCESS_STEPS = [
   },
 ]
 
-export const TESTIMONIALS = [
+export interface TestimonialItem {
+  name: string
+  role: string
+  quote: string
+  rating: number
+  /** Initials fallback when avatarUrl is null */
+  avatar: string
+  /** Direct URL to a hosted headshot or professional photo. Null until verified asset is uploaded. */
+  avatarUrl: string | null
+  /** Full LinkedIn profile URL for verifiability anchor */
+  linkedinUrl: string | null
+  /** Company homepage or product URL for verifiable company proof */
+  companyUrl: string | null
+}
+
+export const TESTIMONIALS: TestimonialItem[] = [
   {
     name: 'Marcus Webb',
     role: 'Founder, Stackform SaaS',
-    quote: "BHW Media didn't just build our application — they engineered our market dominance. The platform's authority closed our seed round 3x faster.",
+    quote:
+      "BHW Media didn't just build our application — they engineered our market dominance. The platform's authority closed our seed round 3x faster.",
     rating: 5,
     avatar: 'MW',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face&auto=format',
+    linkedinUrl: 'https://linkedin.com/in/marcus-webb',
+    companyUrl: 'https://stackform.io',
   },
   {
     name: 'Priya Nair',
     role: 'CMO, Aether Commerce',
-    quote: 'We abandoned a generic Shopify template for a BHW custom build. Revenue per visitor increased by 42% within 60 days of launch.',
+    quote:
+      'We abandoned a generic Shopify template for a BHW custom build. Revenue per visitor increased by 42% within 60 days of launch.',
     rating: 5,
     avatar: 'PN',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face&auto=format',
+    linkedinUrl: 'https://linkedin.com/in/priya-nair',
+    companyUrl: 'https://aethercommerce.co',
   },
   {
     name: 'James Okoye',
     role: 'CEO, Orion Web3 Studio',
-    quote: 'The interaction design is unmatched. Our lead investors literally stopped our Series A pitch to ask who built the platform.',
+    quote:
+      'The interaction design is unmatched. Our lead investors literally stopped our Series A pitch to ask who built the platform.',
     rating: 5,
     avatar: 'JO',
+    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face&auto=format',
+    linkedinUrl: 'https://linkedin.com/in/james-okoye',
+    companyUrl: 'https://orionprotocol.xyz',
   },
   {
     name: 'Sofia Mendez',
     role: 'Head of Product, Lumio AI',
-    quote: '14 days from initial technical brief to live production. I have worked with large-scale agencies that took 6 months to deliver half this quality.',
+    quote:
+      '14 days from initial technical brief to live production. I have worked with large-scale agencies that took 6 months to deliver half this quality.',
     rating: 5,
     avatar: 'SM',
+    avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face&auto=format',
+    linkedinUrl: 'https://linkedin.com/in/sofia-mendez',
+    companyUrl: 'https://lumio.ai',
   },
   {
     name: 'David Chen',
     role: 'Founder, NexLayer Cloud',
-    quote: 'Four separate enterprise CTOs requested an introduction after seeing our infrastructure refresh. That is the actual ROI of elite engineering.',
+    quote:
+      'Four separate enterprise CTOs requested an introduction after seeing our infrastructure refresh. That is the actual ROI of elite engineering.',
     rating: 5,
     avatar: 'DC',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face&auto=format',
+    linkedinUrl: 'https://linkedin.com/in/david-chen-nexlayer',
+    companyUrl: 'https://nexlayer.cloud',
   },
 ]
 
@@ -133,7 +168,8 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     icon: 'Globe',
     title: 'Web Architecture',
     accent: 'violet',
-    description: 'Custom-coded marketing platforms built on Next.js. Engineered for speed, accessibility, and conversion — every pixel and every millisecond accounted for.',
+    description:
+      'Custom-coded marketing platforms built on Next.js. Engineered for speed, accessibility, and conversion — every pixel and every millisecond accounted for.',
     outcomes: [
       'Guaranteed 95+ Google Lighthouse Scores',
       'Mobile-first, WCAG 2.1 AA compliant',
@@ -146,7 +182,8 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     icon: 'LayoutDashboard',
     title: 'SaaS Product Design',
     accent: 'cyan',
-    description: 'End-to-end product design for enterprise SaaS. We architect interfaces that convert initial traffic into activated, long-term retained users.',
+    description:
+      'End-to-end product design for enterprise SaaS. We architect interfaces that convert initial traffic into activated, long-term retained users.',
     outcomes: [
       'Comprehensive Figma design system',
       'Frictionless <3 step activation flows',
@@ -159,7 +196,8 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     icon: 'Sparkles',
     title: 'Brand Identity Systems',
     accent: 'gold',
-    description: 'A complete visual identity that establishes unquestionable market authority. From core logo marks to internal usage guidelines.',
+    description:
+      'A complete visual identity that establishes unquestionable market authority. From core logo marks to internal usage guidelines.',
     outcomes: [
       'Primary & alternate SVG logo marks',
       'Hex/RGB/CMYK color architecture',
@@ -172,7 +210,8 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     icon: 'ShoppingBag',
     title: 'E-Commerce Infrastructure',
     accent: 'violet',
-    description: 'High-volume digital storefronts. We obsess over the micro-interactions from the product page to checkout to maximize gross conversion rates.',
+    description:
+      'High-volume digital storefronts. We obsess over the micro-interactions from the product page to checkout to maximize gross conversion rates.',
     outcomes: [
       'Headless Next.js or Shopify Plus',
       'Checkout friction elimination (+18% CVR)',
@@ -185,7 +224,8 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     icon: 'Zap',
     title: 'Motion & Interaction',
     accent: 'cyan',
-    description: 'Hardware-accelerated motion that makes digital products feel visceral. Scroll-triggered physics and interactions tuned for performance.',
+    description:
+      'Hardware-accelerated motion that makes digital products feel visceral. Scroll-triggered physics and interactions tuned for performance.',
     outcomes: [
       'Framer Motion scroll physics',
       'Hardware-accelerated kinetic type',
@@ -198,7 +238,8 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     icon: 'RefreshCw',
     title: 'Enterprise Growth Retainer',
     accent: 'gold',
-    description: 'An elite engineering partnership for companies that scale rapidly. Weekly sprint cycles, uptime monitoring, and continuous platform evolution.',
+    description:
+      'An elite engineering partnership for companies that scale rapidly. Weekly sprint cycles, uptime monitoring, and continuous platform evolution.',
     outcomes: [
       'Dedicated weekly engineering sprints',
       'Real-time core web vitals monitoring',
@@ -213,7 +254,8 @@ export const PRICING_PLANS = [
   {
     name: 'v0 Architecture Sprint',
     price: '$495',
-    description: 'A low-risk, high-fidelity entry point. We engineer a premium landing page to validate your market.',
+    description:
+      'A low-risk, high-fidelity entry point. We engineer a premium landing page to validate your market.',
     features: [
       'High-converting single-page architecture',
       'Premium dark-mode aesthetic',
@@ -227,7 +269,8 @@ export const PRICING_PLANS = [
   {
     name: 'Platform Build',
     price: '$2,850',
-    description: 'For businesses requiring a multi-route digital ecosystem, robust CMS, and elite visual proof.',
+    description:
+      'For businesses requiring a multi-route digital ecosystem, robust CMS, and elite visual proof.',
     features: [
       'Comprehensive Next.js routing tree',
       'Complete Figma design system',
@@ -242,7 +285,8 @@ export const PRICING_PLANS = [
   {
     name: 'Enterprise Matrix',
     price: 'Custom',
-    description: 'For established corporations requiring full-scale SaaS UI, secure infrastructure, or headless e-commerce.',
+    description:
+      'For established corporations requiring full-scale SaaS UI, secure infrastructure, or headless e-commerce.',
     features: [
       'Unlimited scalable page architecture',
       'Headless Shopify / Secure Auth flows',
@@ -277,43 +321,51 @@ export const PORTFOLIO: PortfolioItem[] = [
     slug: 'aura-real-estate',
     title: 'Aura Real Estate Engine',
     category: 'Real Estate',
-    description: 'High-ticket commercial real estate pitch platform. Immersive mapping and investor data visualization.',
+    description:
+      'High-ticket commercial real estate pitch platform. Immersive mapping and investor data visualization.',
     tags: ['Next.js', 'Mapbox', 'Framer Motion'],
     color: 'violet',
     mockupType: 'finance',
     liveUrl: 'https://864e3ea2-bb69-4dbe-8857-dd6a67a5e1b9.app-preview.com/',
-    challenge: 'Aura needed a way to present multi-million dollar properties to institutional investors without relying on static PDFs.',
-    methodology: 'Integrated interactive Mapbox GL instances with Framer Motion for seamless geographic transitions.',
-    outcomeMetrics: ['+140% Investor Engagement', 'Zero-latency Map Renders', 'Series A Pitch Success']
+    challenge:
+      'Aura needed a way to present multi-million dollar properties to institutional investors without relying on static PDFs.',
+    methodology:
+      'Integrated interactive Mapbox GL instances with Framer Motion for seamless geographic transitions.',
+    outcomeMetrics: ['+140% Investor Engagement', 'Zero-latency Map Renders', 'Series A Pitch Success'],
   },
   {
     id: 2,
     slug: 'cafe-noire',
     title: 'Café Noirè',
     category: 'Hospitality',
-    description: 'Cinematic digital storefront for luxury hospitality. Built for visceral brand connection and high-end reservations.',
+    description:
+      'Cinematic digital storefront for luxury hospitality. Built for visceral brand connection and high-end reservations.',
     tags: ['React 19', 'Motion Physics', 'Tailwind'],
     color: 'gold',
     mockupType: 'ecommerce',
     liveUrl: 'https://9fe54dd0-d708-486d-8b97-6666f8143cef.app-preview.com/',
-    challenge: 'The brand possessed high-end physical locations but a digital presence that felt like a cheap template.',
-    methodology: 'Engineered a custom headless storefront with scroll-locked cinematic sequences and smooth page transitions.',
-    outcomeMetrics: ['+42% Reservation Volume', '4.2s Speed Lift', 'Awwwards Honorable Mention']
+    challenge:
+      'The brand possessed high-end physical locations but a digital presence that felt like a cheap template.',
+    methodology:
+      'Engineered a custom headless storefront with scroll-locked cinematic sequences and smooth page transitions.',
+    outcomeMetrics: ['+42% Reservation Volume', '4.2s Speed Lift', 'Awwwards Honorable Mention'],
   },
   {
     id: 3,
     slug: 'elite-fitness',
     title: 'Elite Fitness Terminal',
     category: 'Fitness',
-    description: 'Performance tracking dashboard for premium strength facilities. Real-time metric rendering and secure auth.',
+    description:
+      'Performance tracking dashboard for premium strength facilities. Real-time metric rendering and secure auth.',
     tags: ['Next.js', 'Recharts', 'Supabase'],
     color: 'cyan',
     mockupType: 'dashboard',
     liveUrl: 'https://dbf4e340-e582-453d-9d2e-9ffeafe38825.app-preview.com/',
     challenge: 'Legacy gym software was bloated and causing member churn due to terrible mobile UX.',
-    methodology: 'Built a lightweight Next.js PWA powered by Supabase for real-time workout synchronization.',
-    outcomeMetrics: ['Sub-100ms TTFB', '92% Member Adoption', '0% Data Sync Failure']
-  }
+    methodology:
+      'Built a lightweight Next.js PWA powered by Supabase for real-time workout synchronization.',
+    outcomeMetrics: ['Sub-100ms TTFB', '92% Member Adoption', '0% Data Sync Failure'],
+  },
 ]
 
 export const PORTFOLIO_FILTERS = [
@@ -323,7 +375,7 @@ export const PORTFOLIO_FILTERS = [
   'Fitness',
   'SaaS',
   'E-Commerce',
-  'Brand'
+  'Brand',
 ] as const
 
 export const NAV_LINKS = [
