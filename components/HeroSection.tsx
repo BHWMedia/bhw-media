@@ -1,9 +1,10 @@
+// components/HeroSection.tsx
 'use client'
 
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, ExternalLink } from 'lucide-react'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,44 @@ const BADGES = [
   '100% Source Code Ownership',
 ]
 
+// ── Split-text word animation ─────────────────────────────────────────────────
+
+function SplitText({
+  text,
+  className,
+  delay = 0,
+}: {
+  text: string
+  className?: string
+  delay?: number
+}) {
+  const words = text.split(' ')
+  return (
+    <span className={className} aria-label={text}>
+      {words.map((word, i) => (
+        <span
+          key={i}
+          className="inline-block overflow-hidden"
+          style={{ marginRight: i < words.length - 1 ? '0.28em' : 0 }}
+        >
+          <motion.span
+            className="inline-block"
+            initial={{ y: '110%', opacity: 0 }}
+            animate={{ y: '0%', opacity: 1 }}
+            transition={{
+              delay: delay + i * 0.07,
+              duration: 0.75,
+              ease: EASE,
+            }}
+          >
+            {word}
+          </motion.span>
+        </span>
+      ))}
+    </span>
+  )
+}
+
 // ─── Browser Chrome ───────────────────────────────────────────────────────────
 
 interface BrowserChromeProps {
@@ -77,14 +116,12 @@ function BrowserChrome({ demo, isLoaded, onLoad }: BrowserChromeProps) {
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
       >
-        {/* Traffic lights */}
         <div className="flex items-center gap-[6px]">
           <span className="h-[11px] w-[11px] rounded-full bg-[#FF5F57]" />
           <span className="h-[11px] w-[11px] rounded-full bg-[#FFBD2E]" />
           <span className="h-[11px] w-[11px] rounded-full bg-[#28C840]" />
         </div>
 
-        {/* Address bar */}
         <div
           className="flex flex-1 items-center gap-2 rounded-md px-3 py-[5px]"
           style={{
@@ -92,7 +129,6 @@ function BrowserChrome({ demo, isLoaded, onLoad }: BrowserChromeProps) {
             border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
-          {/* Padlock */}
           <svg
             width="10"
             height="10"
@@ -108,7 +144,6 @@ function BrowserChrome({ demo, isLoaded, onLoad }: BrowserChromeProps) {
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
 
-          {/* Domain text */}
           <span
             className="truncate font-mono text-[11px] leading-none"
             style={{ color: '#C8C8D8' }}
@@ -116,7 +151,6 @@ function BrowserChrome({ demo, isLoaded, onLoad }: BrowserChromeProps) {
             {demo.shortUrl}
           </span>
 
-          {/* Open externally */}
           <a
             href={demo.fullUrl}
             target="_blank"
@@ -136,7 +170,6 @@ function BrowserChrome({ demo, isLoaded, onLoad }: BrowserChromeProps) {
         className="relative overflow-hidden"
         style={{ height: '340px', backgroundColor: '#0A0A0F' }}
       >
-        {/* Skeleton shimmer while iframe hydrates */}
         {!isLoaded && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 opacity-30">
@@ -164,12 +197,9 @@ function BrowserChrome({ demo, isLoaded, onLoad }: BrowserChromeProps) {
             opacity: isLoaded ? 1 : 0,
             transition: 'opacity 0.4s ease',
             pointerEvents: 'none',
-            transform: 'scale(1)',
-            transformOrigin: 'top left',
           }}
         />
 
-        {/* Bottom gradient fade — prevents hard iframe cut-off */}
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
           style={{
@@ -238,23 +268,32 @@ function CarouselDots({ total, active, accentColor, onSelect }: DotsProps) {
 export function HeroSection() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [shouldPreload, setShouldPreload] = useState(false)
   const [loadedMap, setLoadedMap] = useState<Record<number, boolean>>({})
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const activateIndex = useCallback((i: number) => {
     setActiveIndex(((i % DEMOS.length) + DEMOS.length) % DEMOS.length)
   }, [])
 
-  // Auto-cycle
+  // Optimization: Wait for main layout hydration before preloading dynamic background frames
+  useEffect(() => {
+    const handleLoad = () => setShouldPreload(true)
+    if (document.readyState === 'complete') {
+      setShouldPreload(true)
+    } else {
+      window.addEventListener('load', handleLoad)
+      return () => window.removeEventListener('load', handleLoad)
+    }
+  }, [])
+
+  // FIX: Reset dynamic timer correctly when activeIndex shifts manually via dots
   useEffect(() => {
     if (paused) return
-    timerRef.current = setInterval(() => {
+    const intervalId = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % DEMOS.length)
     }, CYCLE_INTERVAL_MS)
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [paused])
+    return () => clearInterval(intervalId)
+  }, [paused, activeIndex])
 
   const markLoaded = useCallback((i: number) => {
     setLoadedMap((prev) => ({ ...prev, [i]: true }))
@@ -264,7 +303,6 @@ export function HeroSection() {
 
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden">
-      {/* ── Background layers ──────────────────────────────────────────── */}
       <div className="absolute inset-0 bg-void" />
       <div className="absolute inset-0 bg-mesh-violet opacity-60" />
       <div className="absolute inset-0 bg-mesh-cyan opacity-40" />
@@ -291,31 +329,28 @@ export function HeroSection() {
               // PREMIUM WEB PRODUCTION STUDIO
             </motion.span>
 
-            <h1 className="mt-5 font-bold leading-[1.05] tracking-tight">
-              <motion.span
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.9, ease: EASE }}
-                className="block text-text-primary"
-                style={{ fontSize: 'clamp(44px, 6vw, 88px)' }}
-              >
-                We Build Websites
-              </motion.span>
-              <motion.span
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.9, ease: EASE }}
+            <h1
+              className="mt-5 font-bold leading-[1.05] tracking-tight"
+              style={{ fontSize: 'clamp(44px, 6vw, 88px)' }}
+            >
+              <span className="block">
+                <SplitText
+                  text="We Build Websites"
+                  className="text-text-primary"
+                  delay={0.15}
+                />
+              </span>
+              <span
                 className="block bg-gradient-to-r from-[#7C5BFF] to-[#00D4FF] bg-clip-text text-transparent"
-                style={{ fontSize: 'clamp(44px, 6vw, 88px)' }}
               >
-                That Convert.
-              </motion.span>
+                <SplitText text="That Convert." delay={0.45} />
+              </span>
             </h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.7, ease: EASE }}
+              transition={{ delay: 0.7, duration: 0.7, ease: EASE }}
               className="mt-6 max-w-2xl text-lg leading-relaxed text-text-secondary"
             >
               From immersive SaaS platforms to high-ticket brand launches — BHW
@@ -323,11 +358,10 @@ export function HeroSection() {
               trust, and drive revenue.
             </motion.p>
 
-            {/* ── CTA Block ──────────────────────────────────────────────── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55, duration: 0.7, ease: EASE }}
+              transition={{ delay: 0.85, duration: 0.7, ease: EASE }}
               className="mt-10 flex flex-wrap gap-4"
             >
               <Link
@@ -337,11 +371,9 @@ export function HeroSection() {
                 Start a Project →
               </Link>
 
-              <a
-                href="https://calendly.com/mediabhw"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950/50 px-8 py-4 font-semibold text-neutral-300 transition-all duration-200 hover:border-[#7C5BFF] hover:text-[#7C5BFF] hover:bg-neutral-900/40"
+              <Link
+                href="/audit"
+                className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-elevated/40 px-8 py-4 font-semibold text-text-secondary backdrop-blur-sm transition-all duration-200 hover:border-violet/50 hover:text-violet hover:bg-elevated/60"
               >
                 <svg
                   width="14"
@@ -354,19 +386,16 @@ export function HeroSection() {
                   strokeLinejoin="round"
                   aria-hidden="true"
                 >
-                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                  <line x1="16" x2="16" y1="2" y2="6" />
-                  <line x1="8" x2="8" y1="2" y2="6" />
-                  <line x1="3" x2="21" y1="10" y2="10" />
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                 </svg>
-                Book a Free Audit
-              </a>
+                Free Site Audit
+              </Link>
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.7 }}
+              transition={{ delay: 1.05, duration: 0.7 }}
               className="mt-8 flex flex-wrap gap-6"
             >
               {BADGES.map((badge) => (
@@ -391,7 +420,6 @@ export function HeroSection() {
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
           >
-            {/* Ambient glow — reacts to active accent */}
             <div
               className="absolute inset-0 -z-10 blur-3xl transition-colors duration-700"
               style={{
@@ -399,7 +427,6 @@ export function HeroSection() {
               }}
             />
 
-            {/* Slide area — AnimatePresence for cross-fade */}
             <div className="relative overflow-hidden rounded-2xl">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -418,8 +445,8 @@ export function HeroSection() {
               </AnimatePresence>
             </div>
 
-            {/* Pre-render hidden iframes for all non-active demos */}
-            {DEMOS.map((demo, i) =>
+            {/* Performance Optimized Preloader Track */}
+            {shouldPreload && DEMOS.map((demo, i) =>
               i === activeIndex ? null : (
                 <iframe
                   key={demo.fullUrl}
@@ -439,10 +466,9 @@ export function HeroSection() {
                     zIndex: -1,
                   }}
                 />
-              ),
+              )
             )}
 
-            {/* Navigation dots */}
             <CarouselDots
               total={DEMOS.length}
               active={activeIndex}
@@ -450,7 +476,6 @@ export function HeroSection() {
               onSelect={activateIndex}
             />
 
-            {/* Progress bar */}
             {!paused && (
               <motion.div
                 key={`progress-${activeIndex}`}
