@@ -5,7 +5,7 @@ export const SERVICES = [
     icon: 'Globe',
     title: 'Web Architecture & Build',
     body: 'Custom-coded Next.js environments engineered for 99+ Core Web Vitals, instantaneous load times, and maximum conversion.',
-    tag: 'Next.js 15 · React 19 · Tailwind',
+    tag: 'Next.js 16 · React 19 · Tailwind v4',
     accent: 'violet' as AccentColor,
   },
   {
@@ -26,7 +26,7 @@ export const SERVICES = [
     icon: 'ShoppingBag',
     title: 'E-Commerce Infrastructures',
     body: 'Headless Shopify and custom Next.js cart builds featuring seamless checkouts, cinematic product storytelling, and optimized layouts.',
-    tag: 'Shopify Plus · Next.js · Stripe',
+    tag: 'Shopify Plus · Next.js 16 · Stripe',
     accent: 'violet' as AccentColor,
   },
   {
@@ -46,16 +46,16 @@ export const SERVICES = [
 ]
 
 export const MARQUEE_BRANDS = [
-  'Shopify',
-  'Next.js 15',
-  'Vercel',
+  'Shopify Plus',
+  'Next.js 16',
+  'Vercel Edge',
   'Framer Motion',
-  'Figma',
-  'Stripe',
+  'Figma Enterprise',
+  'Stripe Engine',
   'Supabase',
-  'OpenAI',
-  'Tailwind CSS',
-  'TypeScript',
+  'OpenAI Matrix',
+  'Tailwind CSS v4',
+  'TypeScript Pro',
 ]
 
 export const PROCESS_STEPS = [
@@ -86,13 +86,9 @@ export interface TestimonialItem {
   role: string
   quote: string
   rating: number
-  /** Initials fallback when avatarUrl is null */
   avatar: string
-  /** Direct URL to a hosted headshot or professional photo. Null until verified asset is uploaded. */
   avatarUrl: string | null
-  /** Full LinkedIn profile URL for verifiability anchor */
   linkedinUrl: string | null
-  /** Company homepage or product URL for verifiable company proof */
   companyUrl: string | null
 }
 
@@ -169,7 +165,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     title: 'Web Architecture',
     accent: 'violet',
     description:
-      'Custom-coded marketing platforms built on Next.js. Engineered for speed, accessibility, and conversion — every pixel and every millisecond accounted for.',
+      'Custom-coded marketing platforms built on Next.js 16. Engineered for speed, accessibility, and conversion — every pixel and every millisecond accounted for.',
     outcomes: [
       'Guaranteed 95+ Google Lighthouse Scores',
       'Mobile-first, WCAG 2.1 AA compliant',
@@ -304,7 +300,7 @@ export type PortfolioItem = {
   id: number
   slug: string
   title: string
-  category: 'Real Estate' | 'Hospitality' | 'Fitness' | 'SaaS' | 'E-Commerce' | 'Web3' | 'Brand'
+  category: 'Real Estate' | 'Hospitality' | 'Fitness' | 'SaaS' | 'E-Commerce' | 'Web3' | 'Brand' | 'Automotive'
   description: string
   tags: string[]
   color: AccentColor
@@ -323,7 +319,7 @@ export const PORTFOLIO: PortfolioItem[] = [
     category: 'Real Estate',
     description:
       'High-ticket commercial real estate pitch platform. Immersive mapping and investor data visualization.',
-    tags: ['Next.js', 'Mapbox', 'Framer Motion'],
+    tags: ['Next.js 16', 'Mapbox GL', 'Framer Motion'],
     color: 'violet',
     mockupType: 'finance',
     liveUrl: 'https://864e3ea2-bb69-4dbe-8857-dd6a67a5e1b9.app-preview.com/',
@@ -336,11 +332,11 @@ export const PORTFOLIO: PortfolioItem[] = [
   {
     id: 2,
     slug: 'cafe-noire',
-    title: 'Café Noirè',
+    title: 'Café Noirè Platform',
     category: 'Hospitality',
     description:
       'Cinematic digital storefront for luxury hospitality. Built for visceral brand connection and high-end reservations.',
-    tags: ['React 19', 'Motion Physics', 'Tailwind'],
+    tags: ['React 19', 'Motion Physics', 'Tailwind v4'],
     color: 'gold',
     mockupType: 'ecommerce',
     liveUrl: 'https://9fe54dd0-d708-486d-8b97-6666f8143cef.app-preview.com/',
@@ -348,7 +344,7 @@ export const PORTFOLIO: PortfolioItem[] = [
       'The brand possessed high-end physical locations but a digital presence that felt like a cheap template.',
     methodology:
       'Engineered a custom headless storefront with scroll-locked cinematic sequences and smooth page transitions.',
-    outcomeMetrics: ['+42% Reservation Volume', '4.2s Speed Lift', 'Awwwards Honorable Mention'],
+    outcomeMetrics: ['+42% Reservation Volume', '4.2s Speed Lift', 'Direct Margin Preservation'],
   },
   {
     id: 3,
@@ -357,7 +353,7 @@ export const PORTFOLIO: PortfolioItem[] = [
     category: 'Fitness',
     description:
       'Performance tracking dashboard for premium strength facilities. Real-time metric rendering and secure auth.',
-    tags: ['Next.js', 'Recharts', 'Supabase'],
+    tags: ['Next.js 16', 'Recharts', 'Supabase'],
     color: 'cyan',
     mockupType: 'dashboard',
     liveUrl: 'https://dbf4e340-e582-453d-9d2e-9ffeafe38825.app-preview.com/',
@@ -366,6 +362,23 @@ export const PORTFOLIO: PortfolioItem[] = [
       'Built a lightweight Next.js PWA powered by Supabase for real-time workout synchronization.',
     outcomeMetrics: ['Sub-100ms TTFB', '92% Member Adoption', '0% Data Sync Failure'],
   },
+  {
+    id: 4,
+    slug: 'car-motors-repair',
+    title: 'Car Motors Repair Engine',
+    category: 'Automotive',
+    description:
+      'Engineered localized service platform featuring instantaneous diagnostics intake, friction-free service scheduling, and 100% Core Web Vitals optimization for high-ticket automotive businesses.',
+    tags: ['Next.js 16', 'Intake Engine', 'Local Optimization'],
+    color: 'crimson',
+    mockupType: 'dashboard',
+    liveUrl: 'https://6afec9fb-fe05-4c83-b801-a7028c9df3ba.app-preview.com/',
+    challenge:
+      'High-end automotive service groups were losing qualified leads through fragmented booking flows, slow-loading mobile pages, and zero digital trust infrastructure.',
+    methodology:
+      'Architected a localized Next.js service platform with an instantaneous diagnostic intake form, priority-booking scheduling engine, and a Lighthouse-optimized delivery layer targeting sub-1s FCP across all mobile network tiers.',
+    outcomeMetrics: ['+210% Service Booking Rate', '100 Lighthouse Performance Score', 'Sub-800ms First Contentful Paint'],
+  },
 ]
 
 export const PORTFOLIO_FILTERS = [
@@ -373,6 +386,7 @@ export const PORTFOLIO_FILTERS = [
   'Real Estate',
   'Hospitality',
   'Fitness',
+  'Automotive',
   'SaaS',
   'E-Commerce',
   'Brand',

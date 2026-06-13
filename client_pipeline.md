@@ -16,3 +16,7 @@
 3. Elite Fitness & Gym Tracker
    - Preview Link: https://dbf4e340-e582-453d-9d2e-9ffeafe38825.app-preview.com/
    - Core Target: Boutique fitness centers, personal training studios.
+
+4. Car Motors Repair Engine
+   - Preview Link: https://6afec9fb-fe05-4c83-b801-a7028c9df3ba.app-preview.com/
+   - Core Target: High-end automotive service groups, luxury tuning facilities, independent repair clinics.

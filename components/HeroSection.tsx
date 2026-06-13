@@ -35,6 +35,12 @@ const DEMOS: DemoPreview[] = [
     fullUrl: 'https://dbf4e340-e582-453d-9d2e-9ffeafe38825.app-preview.com/',
     accentColor: '#7C5BFF',
   },
+  {
+    label: 'Car Motors Repair Engine',
+    shortUrl: '6afec9fb.app-preview.com',
+    fullUrl: 'https://6afec9fb-fe05-4c83-b801-a7028c9df3ba.app-preview.com/',
+    accentColor: '#DC2626',
+  },
 ]
 
 const EASE = [0.16, 1, 0.3, 1] as const
@@ -151,7 +157,6 @@ function BrowserChrome({ demo, isLoaded, onLoad }: BrowserChromeProps) {
         <iframe
           src={demo.fullUrl}
           title={demo.label}
-          loading="lazy"
           sandbox="allow-scripts allow-same-origin"
           onLoad={onLoad}
           className="h-full w-full border-0"
@@ -318,7 +323,7 @@ export function HeroSection() {
               trust, and drive revenue.
             </motion.p>
 
-            {/* ── NEW CONVERSION CTA BLOCK ──────────────────────────────── */}
+            {/* ── CTA Block ──────────────────────────────────────────────── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -331,28 +336,28 @@ export function HeroSection() {
               >
                 Start a Project →
               </Link>
-              
+
               <a
                 href="https://calendly.com/mediabhw"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950/50 px-8 py-4 font-semibold text-neutral-300 transition-all duration-200 hover:border-[#7C5BFF] hover:text-[#7C5BFF] hover:bg-neutral-900/40"
               >
-                <svg 
-                  width="14" 
-                  height="14" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   aria-hidden="true"
                 >
-                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-                  <line x1="16" x2="16" y1="2" y2="6"/>
-                  <line x1="8" x2="8" y1="2" y2="6"/>
-                  <line x1="3" x2="21" y1="10" y2="10"/>
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                  <line x1="16" x2="16" y1="2" y2="6" />
+                  <line x1="8" x2="8" y1="2" y2="6" />
+                  <line x1="3" x2="21" y1="10" y2="10" />
                 </svg>
                 Book a Free Audit
               </a>
@@ -413,25 +418,25 @@ export function HeroSection() {
               </AnimatePresence>
             </div>
 
-            {/* Pre-render hidden iframes for the OTHER two demos so they load in background */}
+            {/* Pre-render hidden iframes for all non-active demos */}
             {DEMOS.map((demo, i) =>
               i === activeIndex ? null : (
                 <iframe
                   key={demo.fullUrl}
                   src={demo.fullUrl}
                   title={`preload-${demo.label}`}
-                  loading="lazy"
                   sandbox="allow-scripts allow-same-origin"
                   onLoad={() => markLoaded(i)}
                   aria-hidden="true"
                   tabIndex={-1}
                   style={{
                     position: 'absolute',
-                    width: '1px',
-                    height: '1px',
-                    opacity: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0.001,
                     pointerEvents: 'none',
                     border: 'none',
+                    zIndex: -1,
                   }}
                 />
               ),
