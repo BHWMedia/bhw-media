@@ -1,5 +1,6 @@
 // app/layout.tsx
-import { Analytics } from '@vercel/analytics/next'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import { Inter, JetBrains_Mono } from 'next/font/google'
@@ -214,7 +215,9 @@ export default function RootLayout({
         {/* GDPR cookie consent notice */}
         <CookieNotice />
 
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {/* Real-time Production Diagnostics */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
