@@ -6,24 +6,21 @@ import { z } from 'zod'
 // ─── Validation Schema ────────────────────────────────────────────────────────
 
 const contactSchema = z.object({
-  name: z
-    .string()
-    .min(2, 'Name too short')
-    .max(80, 'Name too long'),
-  email: z
-    .string()
-    .email('Invalid email'),
-  company: z.string().max(100).optional(),
+  name: z.string().min(2, 'Name too short').max(80, 'Name too long'),
+  email: z.string().email('Invalid email'),
+  company: z.string().max(100).optional().default('Not provided'),
   projectType: z.string().min(1, 'Project type required'),
   budget: z.string().min(1, 'Budget required'),
-  brief: z
-    .string()
-    .min(10, 'Brief too short') // Lowered from 30 to prevent blocking programmatic wizard templates
-    .max(2000, 'Brief too long'),
-  referral: z.string().optional(),
+  // Accept both brief and message to ensure compatibility with all your forms
+  brief: z.string().max(5000, 'Brief too long').optional(),
+  message: z.string().max(5000, 'Message too long').optional(),
+  referral: z.string().optional().default('Direct'),
   websiteUrl: z.string().optional(),
   painPoint: z.enum(['speed', 'conversion', 'ui']).optional(),
-  source: z.string().optional(),
+  source: z.string().optional().default('Website'),
+}).refine((data) => data.brief || data.message, {
+  message: "Either brief or message must be provided",
+  path: ["brief"],
 })
 
 type ContactPayload = z.infer<typeof contactSchema>
@@ -31,7 +28,14 @@ type ContactPayload = z.infer<typeof contactSchema>
 // ─── HTML Email Template Builder ─────────────────────────────────────────────
 
 function buildEmailHtml(data: ContactPayload): string {
-  const isAuditRequest = data.source === 'AuditWizard'
+  // Syncing with the exact source string sent by DiagnosticWizard
+  const isAuditRequest = data.source === 'DiagnosticWizard' || data.source === 'AuditWizard'
+  
+  // Normalize brief vs message
+  const actualBrief = data.brief || data.message || 'No details provided.'
+  
+  // Clean up the dummy URL sent by the frontend if left blank
+  const hasRealUrl = data.websiteUrl && data.websiteUrl !== 'https://not-provided.com'
 
   const row = (label: string, value: string, isAccent = false) => `
     <tr>
@@ -68,7 +72,7 @@ function buildEmailHtml(data: ContactPayload): string {
     ;">${text}</span>
   `
 
-  const auditMetaBlock = isAuditRequest && data.websiteUrl
+  const auditMetaBlock = isAuditRequest && hasRealUrl
     ? `
       <tr>
         <td colspan="2" style="padding: 14px 0 2px;">
@@ -102,7 +106,7 @@ function buildEmailHtml(data: ContactPayload): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${isAuditRequest ? 'Free Audit Request' : 'New Project Brief'} — BHW Media</title>
+  <title>${isAuditRequest ? 'Diagnostic Audit Request' : 'New Project Brief'} — BHW Media</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #05050A; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
@@ -135,19 +139,19 @@ function buildEmailHtml(data: ContactPayload): string {
                 letter-spacing: 0.15em;
                 text-transform: uppercase;
                 color: ${isAuditRequest ? '#00D4FF' : '#7C5BFF'};
-              ;">${isAuditRequest ? '// FREE AUDIT REQUEST' : '// NEW PROJECT BRIEF'}</p>
+              ;">${isAuditRequest ? '// SYSTEM DIAGNOSTIC REQUEST' : '// NEW PROJECT BRIEF'}</p>
               <p style="
                 margin: 0 0 4px;
                 font-size: 22px;
                 font-weight: 700;
                 color: #FFFFFF;
                 letter-spacing: -0.5px;
-              ;">BHW Media</p>
+              ;">BHW Media Leads</p>
               <p style="
                 margin: 0;
                 font-size: 12px;
                 color: #7A7A94;
-              ;">${isAuditRequest ? 'A free audit has been requested via bhw-media.vercel.app/audit' : 'A new enquiry has been submitted via bhw-media.vercel.app/contact'}</p>
+              ;">${isAuditRequest ? 'A new architecture audit has been requested via the wizard.' : 'A new enquiry has been submitted via the contact form.'}</p>
             </td>
           </tr>
 
@@ -156,7 +160,7 @@ function buildEmailHtml(data: ContactPayload): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 ${row('Name', data.name)}
                 ${row('Email', `<a href="mailto:${data.email}" style="color: #00D4FF; text-decoration: none;">${data.email}</a>`)}
-                ${row('Company', data.company ?? '—')}
+                ${row('Company', data.company && data.company !== 'N/A (Diagnostic)' ? data.company : '—')}
                 <tr>
                   <td style="
                     padding: 11px 0;
@@ -206,7 +210,7 @@ function buildEmailHtml(data: ContactPayload): string {
                   letter-spacing: 0.1em;
                   text-transform: uppercase;
                   color: #7A7A94;
-                ;">Project Brief</p>
+                ;">Project Brief / Assessment</p>
                 <p style="
                   margin: 0;
                   font-size: 14px;
@@ -214,7 +218,7 @@ function buildEmailHtml(data: ContactPayload): string {
                   color: #C8C8D8;
                   white-space: pre-wrap;
                   word-break: break-word;
-                ;">${data.brief.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                ;">${actualBrief.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
               </div>
             </td>
           </tr>
@@ -222,7 +226,7 @@ function buildEmailHtml(data: ContactPayload): string {
           <tr>
             <td style="padding: 0 32px 32px; text-align: center;">
               <a
-                href="mailto:${data.email}?subject=Re%3A%20Your%20BHW%20Media%20${isAuditRequest ? 'audit%20request' : 'enquiry'}"
+                href="mailto:${data.email}?subject=Re%3A%20Your%20BHW%20Media%20${isAuditRequest ? 'Architecture%20Audit' : 'Project%20Enquiry'}"
                 style="
                   display: inline-block;
                   background-color: #7C5BFF;
@@ -250,7 +254,7 @@ function buildEmailHtml(data: ContactPayload): string {
                 color: #3A3A4E;
                 font-family: 'Courier New', monospace;
               ;">
-                BHW Media &nbsp;&middot;&nbsp; mediabhw@gmail.com &nbsp;&middot;&nbsp; instagram.com/media._bhw
+                BHW Media &nbsp;&middot;&nbsp; mediabhw@gmail.com &nbsp;&middot;&nbsp; Secure Lead Intake
               </p>
             </td>
           </tr>
@@ -265,10 +269,7 @@ function buildEmailHtml(data: ContactPayload): string {
 
 // ─── CRM Webhook Dispatcher — Isolated, Fail-Safe ─────────────────────────────
 
-async function dispatchCrmWebhook(
-  data: ContactPayload,
-  webhookUrl: string,
-): Promise<void> {
+async function dispatchCrmWebhook(data: ContactPayload, webhookUrl: string): Promise<void> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 8_000)
 
@@ -285,9 +286,7 @@ async function dispatchCrmWebhook(
     })
 
     if (!response.ok) {
-      console.error(
-        `[BHW CRM] Webhook returned non-200 status: ${response.status} ${response.statusText}`,
-      )
+      console.error(`[BHW CRM] Webhook returned non-200 status: ${response.status} ${response.statusText}`)
       return
     }
 
@@ -303,40 +302,6 @@ async function dispatchCrmWebhook(
   }
 }
 
-// ─── Fallback Resend Notification ─────────────────────────────────────────────
-
-async function dispatchFallbackNotification(
-  resend: Resend,
-  data: ContactPayload,
-): Promise<void> {
-  try {
-    await resend.emails.send({
-      from: 'BHW Media <onboarding@resend.dev>',
-      to: ['mediabhw@gmail.com'],
-      replyTo: data.email,
-      subject: `[FALLBACK] New intake: ${data.name} — ${data.projectType}`,
-      html: `
-        <p style="font-family: monospace; color: #fff; background: #111; padding: 20px; border-radius: 8px;">
-          <strong style="color: #FF4D6D;">FALLBACK ALERT</strong><br/><br/>
-          Primary dispatch failed. Raw lead data below:<br/><br/>
-          <strong>Name:</strong> ${data.name}<br/>
-          <strong>Email:</strong> ${data.email}<br/>
-          <strong>Company:</strong> ${data.company ?? '—'}<br/>
-          <strong>Project Type:</strong> ${data.projectType}<br/>
-          <strong>Budget:</strong> ${data.budget}<br/>
-          <strong>Website:</strong> ${data.websiteUrl ?? '—'}<br/>
-          <strong>Brief:</strong><br/>
-          ${data.brief.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
-        </p>
-      `,
-    })
-    console.info('[BHW Contact] Fallback notification dispatched successfully.')
-  } catch (fallbackErr) {
-    console.error('[BHW Contact] CRITICAL — Fallback notification also failed:', fallbackErr)
-    console.error('[BHW Contact] RAW LEAD DATA FOR MANUAL RECOVERY:', JSON.stringify(data))
-  }
-}
-
 // ─── POST Handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -344,20 +309,15 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { error: 'Invalid request body — expected JSON' },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: 'Invalid request body — expected JSON' }, { status: 400 })
   }
 
   const parsed = contactSchema.safeParse(body)
   if (!parsed.success) {
+    console.error('[BHW Contact] Validation failed:', parsed.error.flatten().fieldErrors)
     return NextResponse.json(
-      {
-        error: 'Validation failed',
-        details: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
+      { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
     )
   }
 
@@ -365,55 +325,47 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   if (!process.env.RESEND_API_KEY) {
     console.error('[BHW Contact] RESEND_API_KEY is missing from environment configuration.')
-    return NextResponse.json(
-      { error: 'Server configuration error' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY)
-  let primaryDispatchSucceeded = false
 
   try {
-    const { error: resendError } = await resend.emails.send({
-      from: 'BHW Media <onboarding@resend.dev>',
-      to: ['mediabhw@gmail.com'],
-      replyTo: data.email,
-      subject: `${data.source === 'AuditWizard' ? '[Audit Request]' : 'New brief:'} ${data.projectType} — ${data.name}`,
+    // Note: reply_to is the correct property name for the Resend SDK
+    const { error: resendError, data: resendData } = await resend.emails.send({
+      from: 'BHW Media Leads <onboarding@resend.dev>', // Keep as onboarding@resend.dev until domain is verified
+      to: ['mediabhw@gmail.com'], 
+      reply_to: data.email, 
+      subject: `${data.source === 'DiagnosticWizard' ? '⚡ [Audit Request]' : '📫 [New Project]'} ${data.projectType} — ${data.name}`,
       html: buildEmailHtml(data),
     })
 
     if (resendError) {
       console.error('[BHW Contact] Resend primary dispatch error:', resendError)
-      await dispatchFallbackNotification(resend, data)
-    } else {
-      primaryDispatchSucceeded = true
-      console.info(`[BHW Contact] Primary dispatch successful for: ${data.email}`)
+      return NextResponse.json(
+        { error: 'Our mail system is temporarily unavailable. Please email mediabhw@gmail.com directly.' },
+        { status: 502 }
+      )
     }
-  } catch (err) {
-    console.error('[BHW Contact] Unexpected exception during primary Resend dispatch:', err)
-    await dispatchFallbackNotification(resend, data)
-  }
 
-  if (process.env.MAKE_CRM_WEBHOOK_URL) {
-    dispatchCrmWebhook(data, process.env.MAKE_CRM_WEBHOOK_URL).catch((err) => {
-      console.error('[BHW Contact] Unhandled rejection from CRM dispatcher:', err)
-    })
-  } else {
-    console.warn('[BHW Contact] MAKE_CRM_WEBHOOK_URL is not set. CRM sync skipped.')
-  }
-
-  if (primaryDispatchSucceeded) {
+    console.info(`[BHW Contact] Primary dispatch successful for: ${data.email}. ID: ${resendData?.id}`)
+    
+    // Non-blocking CRM webhook trigger
+    if (process.env.MAKE_CRM_WEBHOOK_URL) {
+      dispatchCrmWebhook(data, process.env.MAKE_CRM_WEBHOOK_URL).catch((err) => {
+        console.error('[BHW Contact] Unhandled rejection from CRM dispatcher:', err)
+      })
+    }
+    
     return NextResponse.json({ success: true }, { status: 200 })
-  }
 
-  return NextResponse.json(
-    {
-      error:
-        'Our mail system is temporarily unavailable. Your inquiry was logged. Please email mediabhw@gmail.com directly if you need an immediate response.',
-    },
-    { status: 502 },
-  )
+  } catch (err) {
+    console.error('[BHW Contact] Unexpected exception during Resend dispatch:', err)
+    return NextResponse.json(
+      { error: 'An unexpected server error occurred.' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function GET(): Promise<NextResponse> {
