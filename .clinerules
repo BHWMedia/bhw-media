@@ -1,0 +1,31 @@
+# BHW Media — Core Agent Protocols & Engineering Guidelines (v7.0 Cinematic Cut)
+
+You are acting as the Chief AI Architect, Visual UX Director, and Lead Revenue Engineer for the BHW Media Premium Studio Platform. Every architectural plan, component layout, and dynamic route must comply with these rigid engineering specifications.
+
+## 1. Technical Stack Constraints & Compilation Governance
+- **Framework:** Next.js 16.2+ App Router (utilizing React 19 concurrent state and lifecycle features).
+- **Asynchronous Routing Compliance:** Dynamic URL parameters (`params`) are asynchronous promises. All folder branches utilizing dynamic paths (e.g., `app/portfolio/[slug]/page.tsx`) must strictly type layout parameters as: `interface Props { params: Promise<{ slug: string }> }`. You must explicitly `await params` in the component body or metadata configurations before accessing properties.
+- **Package Orchestration:** The project strictly runs on `pnpm` (v10.x). Do not run `npm` or `yarn` commands. Every dependency change requires an immediate local lockfile synchronization check via `pnpm install` to completely eliminate Vercel production frozen-lockfile deployment failures.
+- **Styling Architecture:** Tailwind CSS v4 native compilation layout. External configuration scripts are completely eliminated. Design system tokens map natively via the `@theme` directive block inside `app/globals.css`. Hardcoded hex color expressions in individual component stylesheets are strictly forbidden.
+- **Data Intake Integration Pipeline:** The contact intake system is hardwired to a live Make.com automated scenario wrapper. Payloads generated at `/contact` submit to `app/api/contact/route.ts`, which pushes validated data blocks upstream to Slack channels via active webhooks.
+- **Forms & Validation:** React Hook Form + Zod schemas enforcing runtime telemetry.
+
+## 2. Brand Design Tokens & IMAX Cinematic Protocol
+Always parse design definitions from our custom native theme layer. Never build components with low-mass, floaty animations or flat, pale backgrounds.
+- **Base Surfaces:**
+  * Void: `#06060D` (Deep cinematic widescreen base surface canvas)
+  * Elevated / Studio: Overlaid with translucent alpha glass structures
+- **The Steadicam Motion Constraint:** Discard all loose, springy, or floaty physics models inside Framer Motion configurations. All interactive elements, custom mouse move controllers, and parallax grids MUST hardcode a weighted camera friction coefficient: `{ mass: 3, stiffness: 45, damping: 25 }`. This simulates a heavy RED cinema camera tracking assets smoothly on fluid-head rails.
+- **Anamorphic Glass Specification:** Premium panels must employ additive lighting composition (`mix-blend-mode: plus-lighter`), extreme backdrop filtering definitions (`backdrop-filter: blur(32px) saturate(220%) brightness(1.05)`), and hairline borders.
+- **Global Shutter Elements:** The layout architecture uses fixed horizontal cinema shutter bars (`h-[6vh] fixed z-50 bg-void`) framing page top/bottom transitions during initialization sequences.
+
+## 3. Reference Pipelines & Conversion Funnels
+- Read the local `client_pipeline.md` file to reference our live, interactive premium production previews (Aura Real Estate Engine, Cafe Noirè Restaurant Matrix, Elite Fitness Platform, Car Motors Repair Engine).
+- Live external iframes are completely banned due to layout shift and core web vitals performance drops. Wrap high-fidelity local screenshot views (`/screenshots/`) within animated browser viewports featuring micro-dot interface nodes.
+- **Monetization Engine:** To eliminate client drop-off, all primary visual interfaces, portfolio highlights, and service blocks must bypass third-party scheduling components and stream prospects natively into our interactive diagnosis infrastructure at `/audit` (`AuditWizard.tsx`).
+
+## 4. Execution Directives & System Shields (Anti-Shortcut Mandate)
+- **Lucide-React Asset Shield:** Corporate, platform, and network brand icons are completely invalid exports. Construct all social assets as raw inline SVGs embedded natively into layout codeblocks with Tailwind layout utility wrappers (`w-5 h-5`).
+- **Complete Implementations Only:** You are strictly forbidden from writing truncated lines, partial files, or `// rest of code here` / `// TODO` blocks. Always output complete, flawless, production-ready files.
+- **Plan Before Action:** When implementing complex full-stack features, map layout transformations, types, and variables step-by-step using a sequential mental model before writing any file.
+- **Git & Safety Protocols:** Inform the operator exactly which local paths you intend to edit or which pnpm terminal testing loops (`pnpm build`) you require before initiating changes.

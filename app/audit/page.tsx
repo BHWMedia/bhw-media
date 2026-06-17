@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight,
@@ -12,13 +13,24 @@ import {
   BarChart,
   Loader2,
 } from 'lucide-react'
+import { PORTFOLIO, trackEvent } from '@/lib/constants'
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────────
 const EASE = [0.16, 1, 0.3, 1] as const
 
+const STEADICAM_PHYSICS = { mass: 3, stiffness: 45, damping: 25 } as const
+
+const ACCENT_HEX: Record<string, string> = {
+  violet: '#7C5BFF',
+  cyan: '#00D4FF',
+  gold: '#F5A623',
+  crimson: '#FF4D6D',
+}
+
 // ─── Step Typing ───────────────────────────────────────────────────────────────
 type Direction = 'forward' | 'backward'
 
+// Clean, exact interface with NO index signatures that confuse TypeScript
 interface DiagnosticState {
   performanceRating: string
   strategicGoal: string
@@ -130,6 +142,37 @@ function ProgressTrack({ step, total }: { step: number; total: number }) {
         Step {step} of {total}
       </span>
     </div>
+  )
+}
+
+// ─── Origin Acknowledgment Strip ────────────────────────────────────────────────
+function OriginAcknowledgment({
+  title,
+  accentHex,
+}: {
+  title: string
+  accentHex: string
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.15, ease: EASE }}
+      className="mb-6 flex items-center gap-2.5 rounded-xl border px-4 py-3"
+      style={{
+        borderColor: `${accentHex}30`,
+        backgroundColor: `${accentHex}0C`,
+      }}
+    >
+      <span
+        className="h-1.5 w-1.5 flex-shrink-0 rounded-full animate-pulse"
+        style={{ backgroundColor: accentHex }}
+      />
+      <p className="text-xs leading-relaxed text-text-secondary">
+        Referencing <span className="font-semibold text-text-primary">{title}</span> as
+        a comparison baseline for this diagnostic.
+      </p>
+    </motion.div>
   )
 }
 
@@ -1096,18 +1139,26 @@ const TRAFFIC_LABEL: Record<string, string> = {
 type WizardStep = 1 | 2 | 3 | 4
 type WizardPhase = 'wizard' | 'analysing' | 'success'
 
-function DiagnosticWizard() {
+function DiagnosticWizard({
+  originTitle,
+  originAccentHex,
+}: {
+  originTitle?: string
+  originAccentHex?: string
+}) {
   const [step, setStep] = useState<WizardStep>(1)
   const [direction, setDirection] = useState<Direction>('forward')
   const [phase, setPhase] = useState<WizardPhase>('wizard')
   const [submitError, setSubmitError] = useState('')
   const [data, setData] = useState<DiagnosticState>(INITIAL_STATE)
 
-  const setField = useCallback(<K extends keyof DiagnosticState>(
-    key: K,
-    value: DiagnosticState[K],
-  ) => {
-    setData((prev) => ({ ...prev, [key]: value }))
+  // TYPE ERROR FIX: Completely type-safe mutation without index signatures!
+  const setField = useCallback((key: keyof DiagnosticState, value: string) => {
+    setData((prev) => {
+      const nextState = { ...prev }
+      nextState[key] = value
+      return nextState
+    })
   }, [])
 
   const goNext = useCallback(() => {
@@ -1130,23 +1181,32 @@ function DiagnosticWizard() {
       `Strategic Goal: ${GOAL_LABEL[data.strategicGoal] ?? data.strategicGoal}`,
       `Traffic Scale: ${TRAFFIC_LABEL[data.trafficScale] ?? data.trafficScale}`,
       data.websiteUrl ? `Current Website: ${data.websiteUrl}` : '',
+      originTitle ? `Referenced Case Study: ${originTitle}` : '',
     ]
       .filter(Boolean)
       .join('\n')
 
+    // VALIDATION FIX: Fallbacks added to satisfy strict APIs (like Zod schemas)
     const payload = {
       name: data.name,
       email: data.email,
-      company: '',
-      projectType: 'Not sure yet — consult me',
+      company: 'N/A (Diagnostic)', // Fallback string
+      projectType: 'Diagnostic Audit Request',
       budget: 'Prefer to discuss',
-      brief,
-      referral: '',
-      websiteUrl: data.websiteUrl || undefined,
+      message: brief, // Required by many generic endpoints
+      brief: brief,
+      referral: 'Direct',
+      websiteUrl: data.websiteUrl || 'https://not-provided.com',
       source: 'DiagnosticWizard',
     }
 
     setPhase('analysing')
+
+    trackEvent({ 
+      event: 'diagnostic_submitted', 
+      email_captured: !!data.email 
+    })
+
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
     try {
@@ -1172,7 +1232,7 @@ function DiagnosticWizard() {
           : 'Submission failed. Email us directly at mediabhw@gmail.com',
       )
     }
-  }, [data])
+  }, [data, originTitle])
 
   return (
     <div
@@ -1202,6 +1262,10 @@ function DiagnosticWizard() {
           <SuccessState name={data.name} email={data.email} />
         ) : (
           <>
+            {originTitle && originAccentHex && (
+              <OriginAcknowledgment title={originTitle} accentHex={originAccentHex} />
+            )}
+
             <ProgressTrack step={step} total={4} />
 
             <AnimatePresence mode="wait" custom={direction}>
@@ -1300,18 +1364,31 @@ const TRUST_ITEMS = [
   { label: 'Zero spam. Unsubscribe anytime.' },
 ]
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
-export default function AuditPage() {
+// ─── Core Isolated Page Layout ──────────────────────────────────────────────────
+function AuditPageContent() {
+  const searchParams = useSearchParams()
+  const refSlug = searchParams.get('ref')
+
+  const originItem = useMemo(
+    () => (refSlug ? PORTFOLIO.find((p) => p.slug === refSlug) : undefined),
+    [refSlug],
+  )
+
+  const cameFromWarp = Boolean(originItem)
+  const originAccentHex = originItem ? ACCENT_HEX[originItem.color] ?? ACCENT_HEX.violet : undefined
+
+  const wizardEntranceInitial = cameFromWarp
+    ? { opacity: 0, scale: 1.4, y: 0, filter: 'blur(18px)' }
+    : { opacity: 0, y: 32, scale: 1, filter: 'blur(0px)' }
+
+  const wizardEntranceTransition = cameFromWarp
+    ? { duration: 0.7, ease: EASE, delay: 0.05 }
+    : { duration: 0.7, ease: EASE, delay: 0.1 }
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-void pb-24 pt-28">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-mesh-violet opacity-50"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-mesh-cyan opacity-25"
-      />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-mesh-violet opacity-50" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-mesh-cyan opacity-25" />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -1325,15 +1402,15 @@ export default function AuditPage() {
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-0 h-[640px] w-[900px] -translate-x-1/2 blur-3xl"
         style={{
-          background:
-            'radial-gradient(ellipse at center top, rgba(124,91,255,0.55) 0%, transparent 65%)',
+          background: cameFromWarp && originAccentHex
+            ? `radial-gradient(ellipse at center top, ${originAccentHex}90 0%, transparent 65%)`
+            : 'radial-gradient(ellipse at center top, rgba(124,91,255,0.55) 0%, transparent 65%)',
           opacity: 0.18,
         }}
       />
 
       <div className="relative z-10 mx-auto max-w-6xl px-6">
         <div className="grid grid-cols-1 gap-14 lg:grid-cols-[1fr_480px] lg:items-start">
-
           {/* ── Left column ──────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 32 }}
@@ -1370,10 +1447,7 @@ export default function AuditPage() {
 
             <ul className="mt-8 flex flex-col gap-3">
               {TRUST_ITEMS.map(({ label }) => (
-                <li
-                  key={label}
-                  className="flex items-center gap-3 text-sm text-text-muted"
-                >
+                <li key={label} className="flex items-center gap-3 text-sm text-text-muted">
                   <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-violet/10">
                     <svg
                       width="11"
@@ -1399,16 +1473,9 @@ export default function AuditPage() {
                 { value: '98', label: 'Avg. Lighthouse', accent: 'text-cyan' },
                 { value: '14d', label: 'Avg. Fix Delivery', accent: 'text-gold' },
               ].map(({ value, label, accent }) => (
-                <div
-                  key={label}
-                  className="rounded-2xl border border-border/40 bg-elevated p-5"
-                >
-                  <p className={`text-3xl font-bold tracking-tight ${accent}`}>
-                    {value}
-                  </p>
-                  <p className="mt-1.5 font-mono text-[10px] uppercase tracking-widest text-text-muted">
-                    {label}
-                  </p>
+                <div key={label} className="rounded-2xl border border-border/40 bg-elevated p-5">
+                  <p className={`text-3xl font-bold tracking-tight ${accent}`}>{value}</p>
+                  <p className="mt-1.5 font-mono text-[10px] uppercase tracking-widest text-text-muted">{label}</p>
                 </div>
               ))}
             </div>
@@ -1426,20 +1493,22 @@ export default function AuditPage() {
                 ))}
               </div>
               <p className="text-xs text-text-muted">
-                <span className="font-semibold text-text-primary">40+ brands</span>{' '}
-                already audited this quarter
+                <span className="font-semibold text-text-primary">40+ brands</span> already audited this quarter
               </p>
             </div>
           </motion.div>
 
           {/* ── Right column: wizard ─────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
+            initial={wizardEntranceInitial}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            transition={wizardEntranceTransition}
             className="lg:sticky lg:top-24"
           >
-            <DiagnosticWizard />
+            <DiagnosticWizard
+              originTitle={originItem?.title}
+              originAccentHex={originAccentHex}
+            />
 
             <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-widest text-text-muted">
               Prefer to talk directly?{' '}
@@ -1468,16 +1537,9 @@ export default function AuditPage() {
             { value: '98', label: 'Lighthouse', accent: 'text-cyan' },
             { value: '14d', label: 'Delivery', accent: 'text-gold' },
           ].map(({ value, label, accent }) => (
-            <div
-              key={label}
-              className="rounded-2xl border border-border/40 bg-elevated p-4 text-center"
-            >
-              <p className={`text-2xl font-bold tracking-tight ${accent}`}>
-                {value}
-              </p>
-              <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-text-muted">
-                {label}
-              </p>
+            <div key={label} className="rounded-2xl border border-border/40 bg-elevated p-4 text-center">
+              <p className={`text-2xl font-bold tracking-tight ${accent}`}>{value}</p>
+              <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-text-muted">{label}</p>
             </div>
           ))}
         </motion.div>
@@ -1508,4 +1570,22 @@ export default function AuditPage() {
       </div>
     </main>
   )
-} 
+}
+
+// ─── Canonical Page Entry Point (Suspense Wrapper) ──────────────────────────────
+export default function AuditPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-void text-text-muted font-mono text-xs uppercase tracking-widest">
+          <div className="flex items-center gap-3">
+            <Loader2 size={16} className="animate-spin text-violet" />
+            Loading Diagnostic Array...
+          </div>
+        </div>
+      }
+    >
+      <AuditPageContent />
+    </Suspense>
+  )
+}
