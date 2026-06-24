@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 
-const TRANSITION_EASE = [0.16, 1, 0.3, 1] as const
+const STEADICAM = { type: 'spring' as const, mass: 3, stiffness: 45, damping: 25 }
 
 interface TemplateProps {
   children: ReactNode
@@ -12,12 +12,10 @@ interface TemplateProps {
 export default function Template({ children }: TemplateProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.6,
-        ease: TRANSITION_EASE,
-      }}
+      initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, y: -16, filter: 'blur(6px)' }}
+      transition={STEADICAM}
     >
       {children}
     </motion.div>

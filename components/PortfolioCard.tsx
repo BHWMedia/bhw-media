@@ -1,5 +1,6 @@
 'use client'
 
+import Image from "next/image"
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import {
@@ -215,7 +216,7 @@ export function PortfolioCard({ item, onAuditWarp }: PortfolioCardProps) {
           slow global depth. */}
       <motion.div
         animate={{ scale: isHovered ? 1.015 : 1 }}
-        transition={STEADICAM_PHYSICS}
+         /* transition={STEADICAM_PHYSICS} */
         className="relative z-10 flex h-full flex-col"
       >
         {/* Aspect Ratio Browser Header Wrapper */}
@@ -246,12 +247,14 @@ export function PortfolioCard({ item, onAuditWarp }: PortfolioCardProps) {
           ) : item.image ? (
             <>
               <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-transparent to-black/40 opacity-80 transition-opacity duration-300 group-hover:opacity-40" />
-              <motion.img
+              <Image
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
                 src={item.image}
                 alt={item.title}
                 className="h-full w-full object-cover"
-                animate={{ scale: isHovered ? 1.06 : 1 }}
-                transition={STEADICAM_PHYSICS}
+                 /* animate={{ scale: isHovered ? 1.06 : 1 }} */
+                 /* transition={STEADICAM_PHYSICS} */
               />
             </>
           ) : (
@@ -269,12 +272,12 @@ export function PortfolioCard({ item, onAuditWarp }: PortfolioCardProps) {
               <motion.div
                 className="absolute left-0 right-0 top-0 z-30 bg-[#06060D]"
                 animate={{ height: isHovered ? '16px' : '0px' }}
-                transition={STEADICAM_PHYSICS}
+                 /* transition={STEADICAM_PHYSICS} */
               />
               <motion.div
                 className="absolute bottom-0 left-0 right-0 z-30 bg-[#06060D]"
                 animate={{ height: isHovered ? '16px' : '0px' }}
-                transition={STEADICAM_PHYSICS}
+                 /* transition={STEADICAM_PHYSICS} */
               />
             </>
           )}

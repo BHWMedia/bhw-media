@@ -17,28 +17,30 @@ const ratelimit = new Ratelimit({
 })
 
 export async function middleware(request: NextRequest) {
-  // Only apply this security guard to the contact API
-  if (request.nextUrl.pathname.startsWith('/api/contact')) {
-    
-    // Bypass rate limiting entirely if Upstash keys are missing (prevents local crashes if you haven't set up the .env yet)
+  const { pathname } = request.nextUrl
+
+  // 1. Rate Limiting for Contact API
+  if (pathname.startsWith('/api/contact')) {
     if (!process.env.UPSTASH_REDIS_REST_URL) {
-      console.warn('[Middleware] Upstash Redis keys missing. Bypassing rate limit.')
       return NextResponse.next()
     }
 
-    // Extract user IP
     const ip = request.ip ?? '127.0.0.1'
-    
-    // Check against the limit
     const { success } = await ratelimit.limit(ip)
     
     if (!success) {
-      console.warn(`[Middleware] Rate limit triggered for IP: ${ip}`)
       return NextResponse.json(
         { error: 'Too many requests. Please try again in an hour.' },
         { status: 429 }
       )
     }
+  }
+
+  // 2. Trailing Slash Normalization (Prevents duplicate content)
+  if (pathname !== '/' && pathname.endsWith('/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.slice(0, -1)
+    return NextResponse.redirect(url, 301)
   }
   
   return NextResponse.next()
@@ -46,5 +48,14 @@ export async function middleware(request: NextRequest) {
 
 // 3. Optimize middleware to only run on the contact endpoint
 export const config = {
-  matcher: '/api/contact',
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public assets
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

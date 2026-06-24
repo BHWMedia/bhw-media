@@ -67,20 +67,20 @@ export function StickyLeadBar() {
             aria-live="polite"
             role="complementary"
             aria-label="Project inquiry prompt"
-            className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-center px-4 pb-4 pointer-events-none"
+            className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-center px-4 pb-4 sm:pb-6 pointer-events-none"
           >
-            <div className="pointer-events-auto w-full max-w-3xl flex items-center justify-between gap-4 rounded-2xl border border-border/40 bg-elevated backdrop-blur-xl px-5 py-3.5 shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(124,91,255,0.08)]">
+            <div className="pointer-events-auto w-full max-w-3xl flex items-center justify-between gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-border/40 bg-elevated backdrop-blur-xl px-4 py-3 sm:px-5 sm:py-3.5 shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(124,91,255,0.08)] overflow-hidden">
 
               {/* Left — status dot + copy */}
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <span
                   className="hidden sm:flex h-2 w-2 flex-shrink-0 rounded-full bg-violet"
                   style={{ animation: 'glowPulse 3s ease-in-out infinite' }}
                   aria-hidden="true"
                 />
-                <p className="text-sm font-medium text-text-secondary truncate">
+                <p className="text-xs sm:text-sm font-medium text-text-secondary truncate">
                   <span className="text-text-primary font-semibold">Ready to build?</span>
-                  {' '}We deliver production-grade platforms in&nbsp;14&nbsp;days.
+                  <span className="hidden xs:inline">{' '}We deliver production-grade platforms in&nbsp;14&nbsp;days.</span>
                 </p>
               </div>
 

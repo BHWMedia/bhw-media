@@ -9,6 +9,26 @@ import { TESTIMONIALS, type TestimonialItem } from '@/lib/constants'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
+function WordReveal({ text, className = '' }: { text: string; className?: string }) {
+  const words = text.split(' ')
+  return (
+    <span className={className}>
+      {words.map((word, i) => (
+        <motion.span
+          key={`${word}-${i}`}
+          initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.45, delay: i * 0.04, ease: EASE }}
+          className="mr-[0.28em] inline-block"
+        >
+          {word}
+        </motion.span>
+      ))}
+    </span>
+  )
+}
+
 // ─── Inline SVG Nodes ──────────────────────────────────────────────────────────
 
 function LinkedInIcon() {
@@ -287,9 +307,11 @@ function FeaturedCard({ item }: { item: TestimonialItem }) {
           <StarRow rating={item.rating} />
         </div>
 
-        {/* Quote */}
+        {/* Quote — editorial word-by-word reveal */}
         <blockquote className="mb-7 flex-1 text-base italic leading-relaxed text-text-secondary sm:text-lg">
-          &ldquo;{item.quote}&rdquo;
+          &ldquo;
+          <WordReveal text={item.quote.replace(/^"|"$/g, '')} />
+          &rdquo;
         </blockquote>
 
         {/* Author row */}

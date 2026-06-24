@@ -33,16 +33,16 @@ export function CinematicPreloader() {
     // Lock page scrolling while the cinematic sequence is active
     document.body.style.overflow = 'hidden'
 
-    // Physical timeline sequence
+    // Physical timeline sequence (Optimized for faster perceived performance)
     const timers = [
-      setTimeout(() => setPhase('shutter'), 550),
-      setTimeout(() => setPhase('flash'), 1150),
-      setTimeout(() => setPhase('exit'), 2400),
+      setTimeout(() => setPhase('shutter'), 400),
+      setTimeout(() => setPhase('flash'), 900),
+      setTimeout(() => setPhase('exit'), 1800),
       setTimeout(() => {
         setPhase('done')
         document.body.style.overflow = '' // Restore scroll
         try { sessionStorage.setItem(SESSION_KEY, '1') } catch {}
-      }, 3300)
+      }, 2500)
     ]
 
     // Cleanup function: clears timers AND guarantees scroll is unlocked 

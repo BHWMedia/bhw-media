@@ -19,24 +19,26 @@ function BHWLogo() {
   return (
     <Link
       href="/"
-      className="group flex items-center gap-2.5"
+      className="flex items-center gap-2.5 group"
       aria-label="BHW Media — Home"
     >
-      {/* Logomark */}
-      <div className="relative flex h-7 w-7 flex-shrink-0 items-center justify-center">
-        <div
-          className="absolute inset-0 rounded-lg transition-all duration-400 group-hover:shadow-[0_0_20px_rgba(124,91,255,0.5)]"
-          style={{ background: 'linear-gradient(135deg, #7C5BFF 0%, #00D4FF 100%)' }}
-          aria-hidden="true"
+      {/* Original two-rectangle stacked logomark */}
+      <span className="relative flex h-5 w-5 flex-shrink-0" aria-hidden="true">
+        <span
+          className="absolute right-0 top-0 h-2 w-2 rounded-sm transition-transform duration-300 group-hover:translate-x-0.5"
+          style={{ backgroundColor: '#3B82F6' }}
         />
-        <span className="relative z-10 font-display text-xs font-black text-white">B</span>
-      </div>
+        <span
+          className="absolute bottom-0 left-0 h-3 w-3 rounded-sm transition-transform duration-300 group-hover:-translate-x-0.5"
+          style={{ backgroundColor: '#1D4ED8' }}
+        />
+      </span>
 
       {/* Wordmark */}
-      <span className="font-display text-base font-bold tracking-tight text-text-primary transition-colors duration-300 group-hover:text-white">
+      <span className="font-bold text-lg tracking-tight text-white transition-colors duration-300 group-hover:text-white">
         BHW
-        <span className="ml-1 text-text-muted font-normal text-xs tracking-[0.12em] hidden sm:inline transition-colors duration-300 group-hover:text-text-secondary">
-          MEDIA
+        <span className="ml-1 text-zinc-500 font-normal text-xs tracking-widest uppercase hidden sm:inline transition-colors duration-300 group-hover:text-zinc-400">
+          Media
         </span>
       </span>
     </Link>

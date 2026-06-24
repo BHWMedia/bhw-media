@@ -159,7 +159,7 @@ function PerspectiveGridItem({ item, parentMouseX, parentMouseY, bounds }: GridI
             alt={item.title}
             fill
             className="object-cover object-top filter grayscale group-hover:grayscale-0 transition-all duration-1000 ease-out scale-100 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 50vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority
           />
           {/* Internal Specular Lens Flare Gradient overlay */}

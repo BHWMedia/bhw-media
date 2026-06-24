@@ -1,0 +1,24 @@
+# BHW Media
+
+> Premium Web Design & Next.js Development Agency. We engineer cinematic, high-converting platforms for SaaS, Web3, and premium brands.
+
+## Core Identity
+- **Website**: https://bhw-media.vercel.app
+- **Stack**: Next.js 16, React 19, Tailwind v4, Framer Motion, Vercel Edge.
+- **Service Model**: 14-day delivery sprint, 100% source code ownership.
+
+## Key Offerings
+- **Web Architecture**: Custom Next.js builds with 99+ Core Web Vitals.
+- **SaaS Product Design**: High-fidelity UI/UX and design systems.
+- **E-Commerce**: Headless Shopify and custom cart infrastructures.
+- **Brand Identity**: Authority-driven visual systems and logo architecture.
+
+## Outreach & Audit
+- **Free Site Audit**: Custom manual evaluation of performance, conversion, and UX bottlenecks.
+- **Diagnostic Wizard**: Interactive funnel at `/audit` for rapid project scoping.
+
+## Navigation
+- [Services](/services)
+- [Portfolio](/portfolio)
+- [Contact](/contact)
+- [Diagnostic Wizard](/audit)

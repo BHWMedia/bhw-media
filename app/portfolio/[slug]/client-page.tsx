@@ -58,6 +58,7 @@ export default function PortfolioClientPage({ item }: { item: any }) {
           style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
         >
           <Image
+            sizes="100vw"
             src={item.image}
             alt={item.title}
             fill

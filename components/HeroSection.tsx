@@ -91,12 +91,19 @@ function KineticWord({
 }) {
   return (
     <motion.span
-      className={`inline-block mr-[0.18em] last:mr-0 transition-[font-weight] duration-500 hover:font-extrabold cursor-default ${
+      className={`inline-block mr-[0.18em] last:mr-0 cursor-default select-none ${
         accent ? 'text-gradient-cosmic' : 'text-text-primary'
       }`}
       initial={from}
       animate={{ x: 0, y: 0, opacity: 1 }}
       transition={{ delay: 0.15 + index * 0.09, duration: 0.85, ease: EASE }}
+      whileHover={{
+        y: -3,
+        filter: accent
+          ? 'drop-shadow(0 0 20px rgba(124,91,255,0.6)) drop-shadow(0 0 40px rgba(0,212,255,0.3))'
+          : 'drop-shadow(0 0 16px rgba(255,255,255,0.25))',
+        transition: { duration: 0.2, ease: 'easeOut' },
+      }}
     >
       {text}
     </motion.span>

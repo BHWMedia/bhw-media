@@ -40,6 +40,15 @@ function InstagramIcon({ size = 16 }: { size?: number }) {
   )
 }
 
+function YoutubeIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.14 1 12 1 12s0 3.86.42 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.86 23 12 23 12s0-3.86-.42-5.58z" />
+      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+    </svg>
+  )
+}
+
 function AuditIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -98,6 +107,7 @@ const SOCIAL_LINKS = [
   { Icon: TwitterIcon, href: 'https://twitter.com/mediabhw', label: 'Twitter / X' },
   { Icon: LinkedinIcon, href: 'https://linkedin.com/company/bhwmedia', label: 'LinkedIn' },
   { Icon: InstagramIcon, href: 'https://instagram.com/media._bhw', label: 'Instagram' },
+  { Icon: YoutubeIcon, href: 'https://youtube.com/@bhwmedia', label: 'YouTube' },
 ]
 
 export default function Footer() {
@@ -128,9 +138,15 @@ export default function Footer() {
                 BHW MEDIA
               </span>
             </Link>
-            <p className="text-sm leading-relaxed text-zinc-400 mb-6 max-w-[240px]">
+            <p className="text-sm leading-relaxed text-zinc-400 mb-4 max-w-[240px]">
               Premium web production and software design built meticulously for enterprise visibility.
             </p>
+            <address className="not-italic text-xs leading-relaxed text-zinc-500 mb-6 space-y-1">
+              <span className="block">Hyderabad, IN</span>
+              <a href="mailto:mediabhw@gmail.com" className="transition-colors hover:text-violet">
+                mediabhw@gmail.com
+              </a>
+            </address>
             <div className="flex items-center gap-2">
               {SOCIAL_LINKS.map(({ Icon, href, label }) => (
                 <a
@@ -237,7 +253,7 @@ export default function Footer() {
           </div>
 
           <p className="text-xs text-zinc-500 font-mono">
-            Next.js V14 · Vercel Edge
+            Next.js 16 · Vercel Edge
           </p>
         </div>
       </div>
