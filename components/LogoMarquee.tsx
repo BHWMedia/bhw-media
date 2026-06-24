@@ -4,31 +4,41 @@ import { motion } from 'framer-motion'
 import { MARQUEE_BRANDS } from '@/lib/constants'
 
 export function LogoMarquee() {
+  const doubled = [...MARQUEE_BRANDS, ...MARQUEE_BRANDS]
+
   return (
-    <section className="relative overflow-hidden py-16 border-y border-white/5 bg-[#05050A]">
-      {/* Infrastructure Label */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#05050A] px-4">
-        <span className="text-[10px] font-mono tracking-widest text-[#7C5BFF] uppercase">
-          // Core Engineering Stack
-        </span>
+    <section className="relative overflow-hidden border-y border-border/20 bg-studio/60 py-14 backdrop-blur-sm">
+      {/* Section label */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
+        <div className="relative -translate-y-1/2">
+          <span className="block rounded-full border border-border/40 bg-studio px-4 py-1 font-mono text-[9px] uppercase tracking-[0.25em] text-violet">
+            // Core Engineering Stack
+          </span>
+        </div>
       </div>
 
-      <div className="flex">
+      {/* Marquee track */}
+      <div className="flex" aria-hidden="true">
         <motion.div
           animate={{ x: ['0%', '-50%'] }}
           transition={{
-            duration: 40,
+            duration: 42,
             ease: 'linear',
             repeat: Infinity,
           }}
-          className="flex flex-none gap-16 pr-16"
+          className="flex flex-none items-center gap-14 pr-14"
         >
-          {[...MARQUEE_BRANDS, ...MARQUEE_BRANDS].map((brand, i) => (
+          {doubled.map((brand, i) => (
             <div
               key={i}
-              className="flex items-center justify-center grayscale opacity-40 hover:opacity-100 hover:grayscale-0 transition-all duration-300 cursor-default"
+              className="group flex cursor-default items-center gap-3 opacity-35 transition-all duration-300 hover:opacity-100"
             >
-              <span className="text-xl md:text-2xl font-bold tracking-tight text-white whitespace-nowrap">
+              {/* Mini dot accent */}
+              <span
+                className="h-1 w-1 flex-shrink-0 rounded-full bg-violet/60 transition-colors duration-300 group-hover:bg-violet"
+                aria-hidden="true"
+              />
+              <span className="whitespace-nowrap font-mono text-sm font-medium tracking-wider text-text-secondary transition-colors duration-300 group-hover:text-text-primary">
                 {brand}
               </span>
             </div>
@@ -36,9 +46,17 @@ export function LogoMarquee() {
         </motion.div>
       </div>
 
-      {/* Edge Fades */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#05050A] to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-[#05050A] to-transparent" />
+      {/* Edge fades */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-studio to-transparent"
+        style={{ opacity: 0.85 }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-studio to-transparent"
+        style={{ opacity: 0.85 }}
+      />
     </section>
   )
 }

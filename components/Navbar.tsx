@@ -6,67 +6,78 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 
-// Mocking constants locally if @/lib/constants is structured differently
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/services' },
   { label: 'Portfolio', href: '/portfolio' },
-  { label: 'Contact', href: '/contact' }
+  { label: 'Contact', href: '/contact' },
 ]
 
-function AuditIcon({ size = 14 }: { size?: number }) {
+const EASE = [0.16, 1, 0.3, 1] as const
+
+function BHWLogo() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
+    <Link
+      href="/"
+      className="group flex items-center gap-2.5"
+      aria-label="BHW Media — Home"
     >
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-    </svg>
+      {/* Logomark */}
+      <div className="relative flex h-7 w-7 flex-shrink-0 items-center justify-center">
+        <div
+          className="absolute inset-0 rounded-lg transition-all duration-400 group-hover:shadow-[0_0_20px_rgba(124,91,255,0.5)]"
+          style={{ background: 'linear-gradient(135deg, #7C5BFF 0%, #00D4FF 100%)' }}
+          aria-hidden="true"
+        />
+        <span className="relative z-10 font-display text-xs font-black text-white">B</span>
+      </div>
+
+      {/* Wordmark */}
+      <span className="font-display text-base font-bold tracking-tight text-text-primary transition-colors duration-300 group-hover:text-white">
+        BHW
+        <span className="ml-1 text-text-muted font-normal text-xs tracking-[0.12em] hidden sm:inline transition-colors duration-300 group-hover:text-text-secondary">
+          MEDIA
+        </span>
+      </span>
+    </Link>
   )
 }
 
-function AuditCTADesktop() {
+function AuditCTA() {
   return (
     <Link
       href="/audit"
-      className="group relative inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-transform active:scale-[0.98]"
-      style={{
-        background: 'linear-gradient(135deg, #7C5BFF 0%, #00D4FF 100%)',
-      }}
+      className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-violet/50"
+      style={{ background: 'linear-gradient(135deg, #7C5BFF 0%, #00D4FF 100%)' }}
     >
-      {/* Pulse ring animation via CSS style injection */}
+      {/* Pulse ring */}
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-full"
         style={{
-          background: 'linear-gradient(135deg, rgba(124,91,255,0.4) 0%, rgba(0,212,255,0.2) 100%)',
-          animation: 'auditPulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite',
+          background: 'linear-gradient(135deg, rgba(124,91,255,0.5) 0%, rgba(0,212,255,0.3) 100%)',
+          animation: 'auditPulse 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite',
         }}
       />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes auditPulse {
-          0%   { transform: scale(1);   opacity: 0.8; }
-          70%  { transform: scale(1.25); opacity: 0;   }
-          100% { transform: scale(1.25); opacity: 0;   }
+          0%   { transform: scale(1);    opacity: 0.7; }
+          70%  { transform: scale(1.28); opacity: 0;   }
+          100% { transform: scale(1.28); opacity: 0;   }
         }
-      `}} />
-      <AuditIcon size={14} />
-      <span className="relative z-10">Free Site Audit</span>
+      ` }} />
+      {/* Shimmer */}
       <span
         aria-hidden="true"
-        className="absolute inset-0 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%)',
-        }}
+        className="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%)' }}
       />
+      {/* Pulse dot */}
+      <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/60" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+      </span>
+      <span className="relative z-10">Free Site Audit</span>
     </Link>
   )
 }
@@ -77,7 +88,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
+    const onScroll = () => setScrolled(window.scrollY > 24)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -90,122 +101,151 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b border-white/[0.05] bg-black/80 backdrop-blur-xl transition-all duration-300 ${
-        scrolled ? 'shadow-[0_4px_30px_rgba(0,0,0,0.7)] bg-black/90' : ''
-      }`}
+      className="fixed inset-x-0 top-0 z-50 transition-all duration-500"
+      style={{
+        background: scrolled
+          ? 'rgba(6,6,13,0.88)'
+          : 'rgba(6,6,13,0.40)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderBottom: scrolled
+          ? '1px solid rgba(46,46,74,0.6)'
+          : '1px solid rgba(46,46,74,0.2)',
+        boxShadow: scrolled ? '0 4px 30px rgba(0,0,0,0.5)' : 'none',
+      }}
     >
-      <nav className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-6">
+      <nav className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-6">
+        <BHWLogo />
 
-        {/* Brand Mark Logo Implementation */}
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 text-xl font-bold text-white group"
-          onClick={() => setOpen(false)}
-        >
-          <span className="relative flex h-5 w-5 flex-shrink-0" aria-hidden="true">
-            <span
-              className="absolute right-0 top-0 h-2 w-2 rounded-sm transition-transform duration-300 group-hover:translate-x-0.5"
-              style={{ backgroundColor: '#3B82F6' }}
-            />
-            <span
-              className="absolute bottom-0 left-0 h-3 w-3 rounded-sm transition-transform duration-300 group-hover:-translate-x-0.5"
-              style={{ backgroundColor: '#1D4ED8' }}
-            />
-          </span>
-          <span className="tracking-tight text-white font-bold">BHW</span>
-          <span className="text-zinc-500 font-normal text-xs tracking-widest uppercase hidden sm:inline transition-colors group-hover:text-zinc-400">
-            Media
-          </span>
-        </Link>
-
-        {/* Desktop Links */}
-        <div className="hidden items-center gap-8 md:flex">
+        {/* Desktop nav links */}
+        <div className="hidden items-center gap-7 md:flex" role="navigation" aria-label="Main navigation">
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm tracking-wide font-medium transition-colors duration-200 hover:text-[#7C5BFF] ${
-                  active ? 'text-[#7C5BFF]' : 'text-zinc-400'
+                className={`relative text-sm font-medium transition-colors duration-200 ${
+                  active ? 'text-text-primary' : 'text-text-muted hover:text-text-secondary'
                 }`}
               >
                 {link.label}
+                {active && (
+                  <motion.div
+                    layoutId="nav-underline"
+                    className="absolute -bottom-1 left-0 right-0 h-px"
+                    style={{ background: 'linear-gradient(to right, #7C5BFF, #00D4FF)' }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
               </Link>
             )
           })}
         </div>
 
-        {/* Desktop Right Conversion CTAs */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Desktop right CTAs */}
+        <div className="hidden items-center gap-3 md:flex">
           <Link
             href="/contact"
-            className="rounded-full border border-zinc-800 bg-zinc-950/40 px-5 py-2.5 text-sm font-medium text-zinc-300 transition-all duration-200 hover:border-zinc-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-zinc-800"
+            className="rounded-full border border-border/50 bg-card/40 px-5 py-2.5 text-sm font-medium text-text-muted transition-all duration-200 hover:border-border hover:text-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-violet/40"
           >
             Start a Project
           </Link>
-          <AuditCTADesktop />
+          <AuditCTA />
         </div>
 
-        {/* Hamburger Control */}
+        {/* Mobile hamburger */}
         <button
           type="button"
           aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="relative z-50 text-zinc-400 transition-colors hover:text-white md:hidden p-2 rounded-lg"
+          className="relative z-50 flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:text-text-primary md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-violet/40"
         >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={open ? 'close' : 'menu'}
+              initial={{ rotate: -30, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 30, opacity: 0 }}
+              transition={{ duration: 0.18, ease: EASE }}
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </motion.div>
+          </AnimatePresence>
         </button>
       </nav>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="fixed inset-0 z-40 flex flex-col bg-black/98 backdrop-blur-2xl md:hidden px-6 pt-[72px]"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: EASE }}
+            className="fixed inset-0 z-40 flex flex-col md:hidden"
+            style={{
+              background: 'rgba(6,6,13,0.97)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              paddingTop: '68px',
+            }}
           >
-            <div className="flex flex-1 flex-col items-center justify-center gap-8 pb-12">
-              {NAV_LINKS.map((link) => {
+            {/* Subtle gradient accent */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{ background: 'radial-gradient(ellipse at top, rgba(124,91,255,0.06) 0%, transparent 60%)' }}
+            />
+
+            <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-7 px-6 pb-16">
+              {NAV_LINKS.map((link, i) => {
                 const active = pathname === link.href
                 return (
-                  <Link
+                  <motion.div
                     key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className={`text-2xl font-semibold transition-colors ${
-                      active ? 'text-[#7C5BFF]' : 'text-zinc-300 hover:text-white'
-                    }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 + i * 0.06, duration: 0.35, ease: EASE }}
                   >
-                    {link.label}
-                  </Link>
+                    <Link
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className={`text-2xl font-semibold transition-colors duration-200 ${
+                        active ? 'text-violet' : 'text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
                 )
               })}
 
-              <div className="w-full max-w-xs h-px bg-zinc-900 my-2" />
+              <div className="my-2 h-px w-full max-w-xs bg-border/30" aria-hidden="true" />
 
-              <Link
-                href="/contact"
-                onClick={() => setOpen(false)}
-                className="w-full max-w-xs text-center rounded-full border border-zinc-800 bg-zinc-900/50 py-3 text-base font-medium text-zinc-300"
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.35, ease: EASE }}
+                className="flex w-full max-w-xs flex-col gap-3"
               >
-                Start a Project
-              </Link>
-
-              <Link
-                href="/audit"
-                onClick={() => setOpen(false)}
-                className="w-full max-w-xs text-center inline-flex items-center justify-center gap-2 rounded-full py-3.5 text-base font-bold text-white shadow-[0_0_40px_rgba(124,91,255,0.3)]"
-                style={{
-                  background: 'linear-gradient(135deg, #7C5BFF 0%, #00D4FF 100%)',
-                }}
-              >
-                <AuditIcon size={16} />
-                Free Site Audit
-              </Link>
+                <Link
+                  href="/contact"
+                  onClick={() => setOpen(false)}
+                  className="w-full rounded-full border border-border/50 bg-card py-3 text-center text-base font-medium text-text-muted transition-colors hover:text-text-secondary"
+                >
+                  Start a Project
+                </Link>
+                <Link
+                  href="/audit"
+                  onClick={() => setOpen(false)}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3.5 text-base font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, #7C5BFF 0%, #00D4FF 100%)' }}
+                >
+                  Free Site Audit
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
         )}

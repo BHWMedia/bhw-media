@@ -1,60 +1,81 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Star } from 'lucide-react'
+import { Star, Award, TrendingUp } from 'lucide-react'
+
+const EASE = [0.16, 1, 0.3, 1] as const
+
+const VALIDATIONS = [
+  {
+    icon: Star,
+    headline: '5.0 / 5.0 Rating',
+    sub: 'Verified on Clutch',
+    accent: '#F5A623',
+    extra: (
+      <div className="flex items-center gap-0.5 mt-2">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <Star key={s} size={12} fill="#F5A623" className="text-gold" />
+        ))}
+      </div>
+    ),
+  },
+  {
+    icon: Award,
+    headline: 'Awwwards.',
+    sub: 'UI/UX Excellence · Honorable Mention',
+    accent: '#00D4FF',
+    extra: null,
+  },
+  {
+    icon: TrendingUp,
+    headline: '$40M+ Client Revenue',
+    sub: 'Generated via our platforms',
+    accent: '#7C5BFF',
+    extra: null,
+  },
+]
 
 export function ValidationsBar() {
   return (
-    <section className="py-12 bg-black border-b border-white/5 relative z-10">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-white/10">
-          
-          {/* Clutch Rating */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col items-center justify-center py-4 md:py-0"
-          >
-            <div className="flex items-center gap-1 mb-2 text-[#F5A623]">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} size={16} fill="currentColor" />
-              ))}
-            </div>
-            <div className="text-white font-semibold tracking-tight text-lg">5.0 / 5.0 Rating</div>
-            <div className="text-[#7A7A94] text-xs font-mono tracking-widest uppercase mt-1">Verified on Clutch</div>
-          </motion.div>
+    <section className="relative border-b border-border/20 py-12 overflow-hidden">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          {VALIDATIONS.map((v, i) => {
+            const Icon = v.icon
+            return (
+              <motion.div
+                key={v.sub}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, ease: EASE, delay: i * 0.1 }}
+                className="group relative flex flex-col items-center justify-center rounded-2xl border border-border/30 bg-card/40 p-6 text-center transition-all duration-400 hover:border-border/60 hover:-translate-y-1 hover:shadow-lg"
+                style={{
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                }}
+              >
+                {/* Icon */}
+                <div
+                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-white/8"
+                  style={{ backgroundColor: `${v.accent}18` }}
+                >
+                  <Icon size={18} style={{ color: v.accent }} />
+                </div>
 
-          {/* Independent Awards */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="flex flex-col items-center justify-center py-4 md:py-0"
-          >
-            <div className="text-[#00D4FF] font-bold text-2xl mb-1 leading-none tracking-tighter">
-              Awwwards.
-            </div>
-            <div className="text-white font-semibold tracking-tight text-lg">Honorable Mention</div>
-            <div className="text-[#7A7A94] text-xs font-mono tracking-widest uppercase mt-1">UI/UX Excellence</div>
-          </motion.div>
-
-          {/* Output Metric */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col items-center justify-center py-4 md:py-0"
-          >
-            <div className="text-[#7C5BFF] font-bold text-3xl mb-1 leading-none tracking-tighter">
-              $40M+
-            </div>
-            <div className="text-white font-semibold tracking-tight text-lg">Client Revenue</div>
-            <div className="text-[#7A7A94] text-xs font-mono tracking-widest uppercase mt-1">Generated via our platforms</div>
-          </motion.div>
-
+                <p
+                  className="font-display text-lg font-bold leading-tight tracking-tight"
+                  style={{ color: v.accent }}
+                >
+                  {v.headline}
+                </p>
+                {v.extra}
+                <p className="mt-1.5 font-mono text-[10px] uppercase tracking-widest text-text-muted">
+                  {v.sub}
+                </p>
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </section>

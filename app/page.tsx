@@ -1,113 +1,107 @@
-import { ServicesGrid } from '@/components/ServicesGrid'
 import { HeroSection } from '@/components/HeroSection'
 import { LogoMarquee } from '@/components/LogoMarquee'
+import { MetricsShowcase } from '@/components/MetricsShowcase'
+import { TechMatrix } from '@/components/TechMatrix'
+import { HorizontalServicesScroll } from '@/components/HorizontalServicesScroll'
 import { StatsBanner } from '@/components/StatsBanner'
 import { ValidationsBar } from '@/components/ValidationsBar'
 import { ProcessSection } from '@/components/ProcessSection'
-import { CtaBanner } from '@/components/CtaBanner'
-import { PortfolioGrid } from '@/components/PortfolioGrid'
+import { FounderSection } from '@/components/FounderSection'
+import { PortfolioCarousel } from '@/components/PortfolioCarousel'
 import { TestimonialsGrid } from '@/components/TestimonialsGrid'
-import { ScrollAnimateWrapper } from '@/components/ScrollAnimateWrapper'
-import { MetricsShowcase } from '@/components/MetricsShowcase'
-import { TechMatrix } from '@/components/TechMatrix'
 import { FAQSection } from '@/components/FAQSection'
+import { CtaBanner } from '@/components/CtaBanner'
+import { ScrollAnimateWrapper } from '@/components/ScrollAnimateWrapper'
+import { AmbientParticleSystem } from '@/components/AmbientParticleSystem'
 
 export default function HomePage() {
   return (
     <main className="relative min-h-screen bg-void text-text-primary overflow-x-hidden">
 
-      {/* ── Hero — internal entrance orchestration management ── */}
+      {/* 1 — Hero: Full-viewport kinetic typography + fluid mesh */}
       <HeroSection />
 
-      {/* ── Logo Marquee — core identity stack ribbon ── */}
-      <ScrollAnimateWrapper preset="fadeIn" delay={0} duration={0.6} margin="-48px">
+      {/* 2 — Tech stack marquee */}
+      <ScrollAnimateWrapper preset="fadeIn" delay={0} duration={0.6} margin="-40px">
         <LogoMarquee />
       </ScrollAnimateWrapper>
 
-      {/* ── Metrics Showcase — objective verification layer ── */}
+      {/* 3 — Glassmorphism metrics cards */}
       <MetricsShowcase />
 
-      {/* ── Tech Matrix — technological stack conversion layer ── */}
+      {/* 4 — Tech stack pills grid */}
       <TechMatrix />
 
-      {/* ── Services Layout Layer ── */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-72px">
-          <div className="max-w-2xl mb-12">
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-cyan">
-              // What We Do
-            </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-              Services built for high-performance brands.
-            </h2>
-          </div>
-        </ScrollAnimateWrapper>
+      {/* 5 — Horizontal scroll services (sticky, 280vh) */}
+      <HorizontalServicesScroll />
 
-        <ScrollAnimateWrapper preset="fadeUp" delay={0.1} duration={0.7} margin="-72px">
-          <ServicesGrid />
-        </ScrollAnimateWrapper>
-      </section>
-
-      {/* ── Stats Telemetry Banner ── */}
-      <ScrollAnimateWrapper preset="fadeIn" delay={0} duration={0.6} margin="-60px">
+      {/* 6 — Stats counter row */}
+      <ScrollAnimateWrapper preset="fadeIn" delay={0} duration={0.6} margin="-50px">
         <StatsBanner />
       </ScrollAnimateWrapper>
 
-      {/* ── Trust Validations Bar ── */}
-      <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-60px">
+      {/* 7 — Social proof validations */}
+      <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-50px">
         <ValidationsBar />
       </ScrollAnimateWrapper>
 
-      {/* ── Core Production Process Pipeline ── */}
-      <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.7} margin="-72px">
+      {/* 8 — Process steps */}
+      <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.7} margin="-60px">
         <ProcessSection />
       </ScrollAnimateWrapper>
 
-      {/* ── Premium Engineering Portfolio Grid ── */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-72px">
-          <div className="mb-12 max-w-2xl">
+      {/* 9 — Founder / about */}
+      <FounderSection />
+
+      {/* 10 — Portfolio carousel */}
+      <section className="relative mx-auto max-w-6xl px-6 py-20 overflow-hidden">
+        <AmbientParticleSystem count={16} />
+        <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-60px">
+          <div className="relative mb-10 max-w-2xl">
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-cyan">
               // Selected Work
             </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+            <h2 className="font-display mt-4 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl lg:text-4xl">
               Platforms that command attention.
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-text-muted">
+            <p className="mt-4 text-sm leading-relaxed text-text-muted sm:text-base">
               Every engagement is custom-scoped and production-engineered from scratch.
-              No templates. No shortcuts.
+              No templates. No shortcuts. Drag or use arrows to explore.
             </p>
           </div>
         </ScrollAnimateWrapper>
-
-        <ScrollAnimateWrapper preset="fadeUp" delay={0.1} duration={0.7} margin="-72px">
-          <PortfolioGrid />
+        <ScrollAnimateWrapper preset="fadeUp" delay={0.1} duration={0.7} margin="-60px">
+          <PortfolioCarousel />
         </ScrollAnimateWrapper>
       </section>
 
-      {/* ── Testimonials Social Proof Matrix ── */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-72px">
-          <div className="mb-12 max-w-2xl">
+      {/* 11 — Testimonials */}
+      <section className="relative mx-auto max-w-6xl px-6 py-20 overflow-hidden">
+        <AmbientParticleSystem count={12} />
+        <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-60px">
+          <div className="mb-10 max-w-2xl">
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-cyan">
               // Client Results
             </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+            <h2 className="font-display mt-4 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl lg:text-4xl">
               Proof in their words.
             </h2>
+            <p className="mt-4 text-sm leading-relaxed text-text-muted sm:text-base">
+              From seed-stage startups to enterprise SaaS platforms, our clients trust BHW Media to
+              deliver market-dominating web architecture.
+            </p>
           </div>
         </ScrollAnimateWrapper>
-
-        <ScrollAnimateWrapper preset="fadeUp" delay={0.1} duration={0.7} margin="-72px">
+        <ScrollAnimateWrapper preset="fadeUp" delay={0.1} duration={0.7} margin="-60px">
           <TestimonialsGrid />
         </ScrollAnimateWrapper>
       </section>
 
-      {/* ── FAQ Objection Mitigation Matrix ── */}
+      {/* 12 — FAQ */}
       <FAQSection />
 
-      {/* ── Closure CTA Pitch Banner ── */}
-      <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-60px">
+      {/* 13 — CTA Banner */}
+      <ScrollAnimateWrapper preset="fadeUp" delay={0} duration={0.65} margin="-50px">
         <CtaBanner />
       </ScrollAnimateWrapper>
 
