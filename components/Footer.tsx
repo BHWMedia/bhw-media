@@ -70,6 +70,7 @@ const NAV_COLUMN = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/services' },
   { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Process', href: '/process' },
   { label: 'Contact', href: '/contact' },
 ]
 
@@ -142,7 +143,6 @@ export default function Footer() {
               Premium web production and software design built meticulously for enterprise visibility.
             </p>
             <address className="not-italic text-xs leading-relaxed text-zinc-500 mb-6 space-y-1">
-              <span className="block">Hyderabad, IN</span>
               <a href="mailto:mediabhw@gmail.com" className="transition-colors hover:text-violet">
                 mediabhw@gmail.com
               </a>

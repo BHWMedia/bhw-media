@@ -113,7 +113,7 @@ export function FAQSection() {
   return (
     <section id="faq" className="mx-auto max-w-6xl px-6 py-24">
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1fr_1.4fr] lg:items-start">
-        {/* Left column — sticky layout positioning */}
+        {/* Left column */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -131,23 +131,23 @@ export function FAQSection() {
             No vague answers. No marketing copy. Direct responses to the concerns that stall high-ticket deals.
           </p>
 
+          {/* Image block */}
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border/30">
+            <img
+              src="https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=700&auto=format&fit=crop"
+              alt="Engineering team collaboration"
+              className="w-full h-48 object-cover opacity-70"
+              loading="lazy"
+            />
+          </div>
+
           <div className="mt-8">
             <Link
               href="/audit"
               prefetch={false}
               className="inline-flex items-center gap-2 rounded-full bg-violet px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-violet-light hover:shadow-[0_0_28px_rgba(124,91,255,0.45)]"
             >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
               Get a Free Site Audit
@@ -155,7 +155,7 @@ export function FAQSection() {
           </div>
         </motion.div>
 
-        {/* Right column — accordion listing layer */}
+        {/* Right column */}
         <div>
           {FAQS.map((faq, i) => (
             <FAQItemRow key={faq.question} {...faq} index={i} />
