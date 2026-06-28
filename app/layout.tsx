@@ -187,8 +187,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Global UI Components */}
         <CursorTrail />
 
-        {/* Ambient background overlay */}
-        <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-[#7C5BFF]/5 opacity-60" />
+        {/* AmbientGlow Persistent Light Source (Phase 1) */}
+        <div aria-hidden="true" className="ambient-glow-source" />
 
         {/* Main Application Shell */}
         <div className="relative z-10 flex min-h-screen flex-col">

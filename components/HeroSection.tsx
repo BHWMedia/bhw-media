@@ -7,8 +7,10 @@ import {
   useSpring,
   useTransform,
   useScroll,
+  useReducedMotion,
+  MotionValue,
 } from 'framer-motion'
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import { AmbientParticleSystem } from '@/components/AmbientParticleSystem'
 
 const STEADICAM = { type: 'spring' as const, mass: 3, stiffness: 45, damping: 25 }
@@ -33,6 +35,76 @@ const TRUST_SIGNALS = [
   'Avg. Delivery Pipeline: 14 Days',
   '100% Source Code Ownership',
 ]
+
+function WarpingCharacter({
+  char,
+  mouseX,
+  mouseY,
+  isReducedMotion,
+}: {
+  char: string
+  mouseX: MotionValue<number>
+  mouseY: MotionValue<number>
+  isReducedMotion: boolean | null
+}) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const springX = useSpring(x, STEADICAM)
+  const springY = useSpring(y, STEADICAM)
+
+  useEffect(() => {
+    if (isReducedMotion) {
+      x.set(0)
+      y.set(0)
+      return
+    }
+
+    const container = ref.current?.closest('section')
+    if (!container || !ref.current) return
+
+    const update = () => {
+      if (isReducedMotion) return
+      const rect = ref.current!.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+
+      const charCenterX = rect.left + rect.width / 2 - containerRect.left
+      const charCenterY = rect.top + rect.height / 2 - containerRect.top
+
+      const dx = mouseX.get() - charCenterX
+      const dy = mouseY.get() - charCenterY
+      const distance = Math.sqrt(dx * dx + dy * dy)
+
+      const maxDistance = 160
+      if (distance < maxDistance) {
+        const power = (1 - distance / maxDistance) * 18
+        x.set((dx / distance) * -power)
+        y.set((dy / distance) * -power)
+      } else {
+        x.set(0)
+        y.set(0)
+      }
+    }
+
+    const unsubX = mouseX.on('change', update)
+    const unsubY = mouseY.on('change', update)
+
+    return () => {
+      unsubX()
+      unsubY()
+    }
+  }, [isReducedMotion, mouseX, mouseY])
+
+  return (
+    <motion.span
+      ref={ref}
+      style={{ x: springX, y: springY }}
+      className="inline-block transition-shadow duration-200"
+    >
+      {char === ' ' ? '\u00A0' : char}
+    </motion.span>
+  )
+}
 
 function FluidMeshBackground({
   mouseX,
@@ -83,12 +155,20 @@ function KineticWord({
   from,
   accent,
   index,
+  mouseX,
+  mouseY,
+  isReducedMotion,
 }: {
   text: string
   from: { x: number; y: number; opacity: number }
   accent: boolean
   index: number
+  mouseX: MotionValue<number>
+  mouseY: MotionValue<number>
+  isReducedMotion: boolean | null
 }) {
+  const chars = text.split('')
+
   return (
     <motion.span
       className={`inline-block mr-[0.18em] last:mr-0 cursor-default select-none ${
@@ -105,13 +185,22 @@ function KineticWord({
         transition: { duration: 0.2, ease: 'easeOut' },
       }}
     >
-      {text}
+      {chars.map((char, i) => (
+        <WarpingCharacter
+          key={i}
+          char={char}
+          mouseX={mouseX}
+          mouseY={mouseY}
+          isReducedMotion={isReducedMotion}
+        />
+      ))}
     </motion.span>
   )
 }
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const isReducedMotion = useReducedMotion()
 
   const mouseX = useMotionValue(500)
   const mouseY = useMotionValue(400)
@@ -140,12 +229,12 @@ export function HeroSection() {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!containerRef.current) return
+      if (!containerRef.current || isReducedMotion) return
       const rect = containerRef.current.getBoundingClientRect()
       mouseX.set(e.clientX - rect.left)
       mouseY.set(e.clientY - rect.top)
     },
-    [mouseX, mouseY],
+    [mouseX, mouseY, isReducedMotion],
   )
 
   return (
@@ -158,10 +247,10 @@ export function HeroSection() {
       <div aria-hidden="true" className="absolute inset-0 noise-texture opacity-30" />
 
       {/* Dynamic fluid mesh following cursor */}
-      <FluidMeshBackground mouseX={springX} mouseY={springY} />
+      {!isReducedMotion && <FluidMeshBackground mouseX={springX} mouseY={springY} />}
 
       {/* Ambient particles */}
-      <AmbientParticleSystem count={22} />
+      <AmbientParticleSystem count={isReducedMotion ? 0 : 22} />
 
       {/* Subtle grid overlay with radial mask */}
       <div
@@ -183,7 +272,7 @@ export function HeroSection() {
         style={{
           background: 'radial-gradient(ellipse, rgba(124,91,255,1) 0%, transparent 70%)',
           filter: 'blur(80px)',
-          animation: 'driftX 14s ease-in-out infinite',
+          animation: isReducedMotion ? 'none' : 'driftX 14s ease-in-out infinite',
         }}
       />
       <div
@@ -192,7 +281,7 @@ export function HeroSection() {
         style={{
           background: 'radial-gradient(ellipse, rgba(0,212,255,1) 0%, transparent 70%)',
           filter: 'blur(80px)',
-          animation: 'driftY 11s ease-in-out infinite reverse',
+          animation: isReducedMotion ? 'none' : 'driftY 11s ease-in-out infinite reverse',
         }}
       />
 
@@ -227,7 +316,14 @@ export function HeroSection() {
             style={{ fontSize: 'clamp(44px, 7vw, 112px)' }}
           >
             {HEADLINE_WORDS.map((word, i) => (
-              <KineticWord key={word.text} {...word} index={i} />
+              <KineticWord
+                key={word.text}
+                {...word}
+                index={i}
+                mouseX={mouseX}
+                mouseY={mouseY}
+                isReducedMotion={isReducedMotion}
+              />
             ))}
           </h1>
 
@@ -305,7 +401,7 @@ export function HeroSection() {
               className="glass-metric-card w-36 rounded-2xl p-4"
               style={{
                 transform: `translateZ(${m.z}px)`,
-                animation: `float ${5 + i * 1.2}s ease-in-out infinite`,
+                animation: isReducedMotion ? 'none' : `float ${5 + i * 1.2}s ease-in-out infinite`,
                 animationDelay: `${i * 0.8}s`,
               }}
             >
@@ -323,7 +419,7 @@ export function HeroSection() {
       <motion.div
         aria-hidden="true"
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        animate={{ y: [0, 7, 0] }}
+        animate={isReducedMotion ? {} : { y: [0, 7, 0] }}
         transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
         style={{ opacity: scrollOpacity }}
       >
@@ -332,7 +428,7 @@ export function HeroSection() {
           <div className="h-9 w-5 rounded-full border border-border/50 p-1">
             <motion.div
               className="mx-auto h-1.5 w-0.5 rounded-full bg-cyan"
-              animate={{ y: [0, 10, 0] }}
+              animate={isReducedMotion ? {} : { y: [0, 10, 0] }}
               transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
             />
           </div>

@@ -436,6 +436,21 @@
     filter: none;
   }
 
+  .ambient-glow-source {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 140vw;
+    height: 140vh;
+    background: radial-gradient(circle at center, #7C5BFF 0%, transparent 65%);
+    filter: blur(140px);
+    opacity: 0.12;
+    z-index: 0;
+    pointer-events: none;
+    will-change: transform;
+  }
+
   .glass-metric-card {
     background: linear-gradient(
       148deg,
