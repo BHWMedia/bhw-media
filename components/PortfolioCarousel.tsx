@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -9,9 +9,17 @@ import {
   useSpring,
   useTransform,
   useScroll,
+  AnimatePresence,
+  useReducedMotion,
 } from 'framer-motion'
-import { ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react'
-import { PORTFOLIO, type PortfolioItem } from '@/lib/constants'
+import { ChevronLeft, ChevronRight, ArrowUpRight, Search } from 'lucide-react'
+import { 
+  PORTFOLIO, 
+  PORTFOLIO_FILTERS, 
+  type PortfolioFilter, 
+  type PortfolioItem,
+  trackEvent 
+} from '@/lib/constants'
 import { AmbientParticleSystem } from '@/components/AmbientParticleSystem'
 
 const STEADICAM = { type: 'spring' as const, mass: 3, stiffness: 45, damping: 25 }
@@ -24,45 +32,67 @@ const ACCENT: Record<string, string> = {
   crimson: '#FF4D6D',
 }
 
-const CAROUSEL_ITEMS = PORTFOLIO.slice(0, 5)
+const FILTER_ACCENTS: Record<string, string> = {
+  All: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
+  'Real Estate': 'border-amber-500/30 bg-amber-500/10 text-amber-400',
+  Hospitality: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
+  Fitness: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
+  Automotive: 'border-rose-500/30 bg-rose-500/10 text-rose-400',
+  SaaS: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
+  'E-Commerce': 'border-rose-500/30 bg-rose-500/10 text-rose-400',
+  Brand: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
+}
 
 function CarouselCard({
   item,
   index,
   activeIndex,
   total,
+  isReducedMotion,
 }: {
   item: PortfolioItem
   index: number
   activeIndex: number
   total: number
+  isReducedMotion: boolean | null
 }) {
   const [hovered, setHovered] = useState(false)
   const accent = ACCENT[item.color] ?? ACCENT.violet
 
   let offset = index - activeIndex
-  if (offset > total / 2) offset -= total
-  if (offset < -total / 2) offset += total
+  // Handle wrapping logic only if more than 2 items to avoid jumpy transitions
+  if (total > 2) {
+    if (offset > total / 2) offset -= total
+    if (offset < -total / 2) offset += total
+  }
 
   const isActive = offset === 0
   const absOffset = Math.abs(offset)
+
+  // 3D Vault Transforms
+  const rotateY = isReducedMotion ? 0 : offset * -28
+  const translateX = isReducedMotion ? offset * 440 : offset * 240
+  const translateZ = isReducedMotion ? 0 : (isActive ? 100 : -absOffset * 140)
+  const scale = isReducedMotion ? (isActive ? 1 : 0.9) : (isActive ? 1 : 0.82 - absOffset * 0.05)
+  const opacity = absOffset > 2 ? 0 : 1 - absOffset * 0.25
+  const blur = isReducedMotion ? 0 : (isActive ? 0 : absOffset * 3)
 
   return (
     <motion.div
       className="absolute left-1/2 top-1/2 w-[min(92vw,420px)]"
       style={{
-        transformStyle: 'preserve-3d',
+        transformStyle: isReducedMotion ? 'flat' : 'preserve-3d',
         zIndex: 10 - absOffset,
       }}
       animate={{
         x: '-50%',
         y: '-50%',
-        rotateY: offset * -28,
-        translateX: offset * 220,
-        translateZ: isActive ? 80 : -absOffset * 120,
-        scale: isActive ? 1 : 0.82 - absOffset * 0.06,
-        opacity: absOffset > 2 ? 0 : 1 - absOffset * 0.22,
-        filter: isActive ? 'blur(0px)' : `blur(${absOffset * 3}px)`,
+        rotateY,
+        translateX,
+        translateZ,
+        scale,
+        opacity,
+        filter: `blur(${blur}px)`,
       }}
       transition={STEADICAM}
       onMouseEnter={() => setHovered(true)}
@@ -79,7 +109,7 @@ function CarouselCard({
         {String(index + 1).padStart(2, '0')}
       </span>
 
-      <Link href={`/portfolio/${item.slug}`} className="group block">
+      <Link href={`/portfolio/${item.slug}`} className="group block focus:outline-none">
         <motion.article
           className="filter-chromatic-hover relative overflow-hidden rounded-2xl border border-border/50 bg-card"
           animate={{
@@ -95,9 +125,11 @@ function CarouselCard({
               <Image
                 src={item.image}
                 alt={item.title}
-                fill
+                width={420}
+                height={262}
                 sizes="(max-width: 768px) 100vw, 420px"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                loading={isActive ? 'eager' : 'lazy'}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 style={{
                   filter: hovered
                     ? 'none'
@@ -137,8 +169,10 @@ function CarouselCard({
   )
 }
 
-export function PortfolioCarousel() {
+export function PortfolioCarousel({ showTitle = true }: { showTitle?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const isReducedMotion = useReducedMotion()
+  const [filter, setFilter] = useState<PortfolioFilter>('All')
   const [activeIndex, setActiveIndex] = useState(0)
   const [bounds, setBounds] = useState({ width: 1000, height: 600 })
 
@@ -156,6 +190,18 @@ export function PortfolioCarousel() {
   })
   const parallaxY = useTransform(scrollYProgress, [0, 1], [40, -40])
 
+  const filteredItems = useMemo(() => {
+    return filter === 'All'
+      ? PORTFOLIO
+      : PORTFOLIO.filter((p) => p.category === filter)
+  }, [filter])
+
+  // Reset active index when filter changes
+  useEffect(() => {
+    setActiveIndex(0)
+    trackEvent({ event: 'portfolio_filter_changed', category: filter })
+  }, [filter])
+
   useEffect(() => {
     if (!containerRef.current) return
     const ro = new ResizeObserver((entries) => {
@@ -169,85 +215,177 @@ export function PortfolioCarousel() {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!containerRef.current) return
+      if (!containerRef.current || isReducedMotion) return
       const rect = containerRef.current.getBoundingClientRect()
       mouseX.set(e.clientX - rect.left)
       mouseY.set(e.clientY - rect.top)
     },
-    [mouseX, mouseY],
+    [mouseX, mouseY, isReducedMotion],
   )
 
-  const prev = () =>
-    setActiveIndex((i) => (i - 1 + CAROUSEL_ITEMS.length) % CAROUSEL_ITEMS.length)
-  const next = () => setActiveIndex((i) => (i + 1) % CAROUSEL_ITEMS.length)
+  const prev = useCallback(() =>
+    setActiveIndex((i) => (i - 1 + filteredItems.length) % filteredItems.length), [filteredItems.length])
+  const next = useCallback(() => 
+    setActiveIndex((i) => (i + 1) % filteredItems.length), [filteredItems.length])
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [prev, next])
+
+  const hasItems = filteredItems.length > 0
+  const isSingleItem = filteredItems.length === 1
 
   return (
     <section
       ref={containerRef}
-      className="relative overflow-hidden py-8"
+      className="relative overflow-hidden py-16"
       onMouseMove={handleMouseMove}
     >
-      <AmbientParticleSystem count={18} />
+      <AmbientParticleSystem count={isReducedMotion ? 0 : 18} />
 
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,91,255,0.08)_0%,transparent_65%)]"
       />
 
+      {/* Filter UI */}
+      <div className="relative z-20 mx-auto mb-16 max-w-6xl px-6">
+        {showTitle && (
+          <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="font-display text-3xl font-bold text-text-primary md:text-4xl">
+                Production Archive
+              </h2>
+              <p className="mt-2 text-sm text-text-muted">
+                Select a vertical to explore tailored high-fidelity case studies.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2">
+          {PORTFOLIO_FILTERS.map((tab) => {
+            const active = filter === tab
+            const style = FILTER_ACCENTS[tab] || FILTER_ACCENTS.All
+
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setFilter(tab)}
+                className={`relative rounded-full px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-wider transition-colors duration-300 ${
+                  active ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                {active && (
+                  <motion.div
+                    layoutId="activeCarouselFilterPill"
+                    className={`absolute inset-0 rounded-full border ${style.split(' ')[0]} ${style.split(' ')[1]}`}
+                    transition={STEADICAM}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  {active && <span className="h-1 w-1 rounded-full animate-ping bg-current" />}
+                  {tab}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <motion.div style={{ y: parallaxY }} className="relative mx-auto max-w-6xl px-6">
         <div
           className="relative mx-auto h-[520px] max-w-5xl"
-          style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
+          style={{ 
+            perspective: isReducedMotion ? 'none' : '1400px', 
+            transformStyle: isReducedMotion ? 'flat' : 'preserve-3d' 
+          }}
         >
-          <motion.div
-            style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-            className="relative h-full w-full"
-          >
-            {CAROUSEL_ITEMS.map((item, i) => (
-              <CarouselCard
-                key={item.slug}
-                item={item}
-                index={i}
-                activeIndex={activeIndex}
-                total={CAROUSEL_ITEMS.length}
-              />
-            ))}
-          </motion.div>
+          <AnimatePresence mode="wait">
+            {!hasItems ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex h-full w-full flex-col items-center justify-center text-center"
+              >
+                <div className="mb-4 rounded-full bg-studio p-6 text-text-muted">
+                  <Search size={40} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-text-primary">No items found</h3>
+                <p className="mt-2 text-text-muted">Try selecting a different vertical filter.</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={filter}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{ 
+                  rotateX: isReducedMotion ? 0 : rotateX, 
+                  rotateY: isReducedMotion ? 0 : rotateY, 
+                  transformStyle: isReducedMotion ? 'flat' : 'preserve-3d' 
+                }}
+                className="relative h-full w-full"
+              >
+                {filteredItems.map((item, i) => (
+                  <CarouselCard
+                    key={item.slug}
+                    item={item}
+                    index={i}
+                    activeIndex={activeIndex}
+                    total={filteredItems.length}
+                    isReducedMotion={isReducedMotion}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            onClick={prev}
-            aria-label="Previous project"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-text-secondary transition-all duration-300 hover:-translate-y-0.5 hover:border-violet/40 hover:text-text-primary"
-          >
-            <ChevronLeft size={18} />
-          </button>
+        {hasItems && !isSingleItem && (
+          <div className="mt-12 flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={prev}
+              aria-label="Previous project"
+              className="group flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-text-secondary transition-all duration-300 hover:-translate-y-0.5 hover:border-violet/40 hover:text-text-primary"
+            >
+              <ChevronLeft size={20} className="transition-transform group-hover:-translate-x-0.5" />
+            </button>
 
-          <div className="flex gap-2">
-            {CAROUSEL_ITEMS.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Go to project ${i + 1}`}
-                onClick={() => setActiveIndex(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === activeIndex ? 'w-8 bg-violet' : 'w-1.5 bg-border hover:bg-text-muted'
-                }`}
-              />
-            ))}
+            <div className="flex gap-2">
+              {filteredItems.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Go to project ${i + 1}`}
+                  onClick={() => setActiveIndex(i)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === activeIndex ? 'w-8 bg-violet' : 'w-1.5 bg-border hover:bg-text-muted'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={next}
+              aria-label="Next project"
+              className="group flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-text-secondary transition-all duration-300 hover:-translate-y-0.5 hover:border-violet/40 hover:text-text-primary"
+            >
+              <ChevronRight size={20} className="transition-transform group-hover:translate-x-0.5" />
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={next}
-            aria-label="Next project"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-text-secondary transition-all duration-300 hover:-translate-y-0.5 hover:border-violet/40 hover:text-text-primary"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
+        )}
       </motion.div>
     </section>
   )

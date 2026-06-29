@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion'
-import { ArrowUpRight, ExternalLink } from 'lucide-react'
-import { PORTFOLIO, PORTFOLIO_FILTERS, type PortfolioFilter, type PortfolioItem } from '@/lib/constants'
+import { motion } from 'framer-motion'
+import { ArrowUpRight } from 'lucide-react'
+import { PortfolioGrid } from '@/components/PortfolioGrid'
+import { PORTFOLIO, type PortfolioItem } from '@/lib/constants'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
@@ -14,203 +15,6 @@ const ACCENT_HEX: Record<string, string> = {
   cyan: '#00D4FF',
   gold: '#F5A623',
   crimson: '#FF4D6D',
-}
-
-// ─── 3D Tilt Card ────────────────────────────────────────────────────────────
-
-function CaseStudyCard({ item, index }: { item: PortfolioItem; index: number }) {
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [hovered, setHovered] = useState(false)
-  const accent = ACCENT_HEX[item.color] ?? '#7C5BFF'
-
-  const mouseX = useMotionValue(0)
-  const mouseY = useMotionValue(0)
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [10, -10]), { stiffness: 260, damping: 30 })
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-10, 10]), { stiffness: 260, damping: 30 })
-  const glowX = useTransform(mouseX, [-0.5, 0.5], [0, 100])
-  const glowY = useTransform(mouseY, [-0.5, 0.5], [0, 100])
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    mouseX.set((e.clientX - rect.left - rect.width / 2) / rect.width)
-    mouseY.set((e.clientY - rect.top - rect.height / 2) / rect.height)
-  }
-
-  const handleMouseLeave = () => {
-    setHovered(false)
-    mouseX.set(0)
-    mouseY.set(0)
-  }
-
-  return (
-    <motion.div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20, scale: 0.96 }}
-      transition={{ duration: 0.5, delay: index * 0.06, ease: EASE }}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: 'preserve-3d',
-      }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl"
-    >
-      {/* Card body */}
-      <motion.div
-        animate={{
-          boxShadow: hovered
-            ? `0 40px 80px rgba(0,0,0,0.6), 0 0 60px ${accent}30, 0 0 0 1px ${accent}25`
-            : '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)',
-        }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col overflow-hidden rounded-2xl bg-card"
-        style={{ transformStyle: 'preserve-3d' }}
-      >
-        {/* ─ Image zone ─ */}
-        <div className="relative overflow-hidden" style={{ aspectRatio: '16/10' }}>
-          <Image
-            src={item.image}
-            alt={item.title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-107"
-            style={{ transform: hovered ? 'scale(1.07)' : 'scale(1)', transition: 'transform 0.7s ease' }}
-          />
-
-          {/* Gradient overlay */}
-          <div
-            className="absolute inset-0"
-            style={{ background: `linear-gradient(to top, ${accent}40 0%, rgba(6,6,13,0.65) 40%, transparent 100%)` }}
-          />
-
-          {/* Mouse-tracking caustic light */}
-          <motion.div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-400 group-hover:opacity-100"
-            style={{
-              background: useTransform(
-                [glowX, glowY],
-                ([x, y]) => `radial-gradient(circle 180px at ${x}% ${y}%, rgba(255,255,255,0.06) 0%, transparent 70%)`,
-              ),
-            }}
-          />
-
-          {/* Letterbox bars on hover */}
-          {item.letterboxEnabled && (
-            <>
-              <motion.div
-                className="absolute inset-x-0 top-0 z-20 bg-void"
-                animate={{ height: hovered ? 14 : 0 }}
-                transition={{ duration: 0.4, ease: EASE }}
-              />
-              <motion.div
-                className="absolute inset-x-0 bottom-0 z-20 bg-void"
-                animate={{ height: hovered ? 14 : 0 }}
-                transition={{ duration: 0.4, ease: EASE }}
-              />
-            </>
-          )}
-
-          {/* Category badge */}
-          <div className="absolute left-4 top-4 z-30">
-            <span
-              className="rounded-full border px-3 py-1 font-mono text-[9px] uppercase tracking-[0.2em] backdrop-blur-md"
-              style={{ borderColor: `${accent}40`, backgroundColor: `${accent}18`, color: accent }}
-            >
-              {item.category}
-            </span>
-          </div>
-
-          {/* Cinematic tagline bottom-left */}
-          <div className="absolute bottom-4 left-4 z-30">
-            <p
-              className="font-mono text-[8px] uppercase tracking-[0.3em] opacity-70"
-              style={{ color: accent }}
-            >
-              {item.cinematicTagline}
-            </p>
-          </div>
-
-          {/* View CTA on hover */}
-          <motion.div
-            className="absolute inset-0 z-20 flex items-center justify-center"
-            animate={{ opacity: hovered ? 1 : 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <Link
-              href={`/portfolio/${item.slug}`}
-              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-transform hover:scale-105"
-              style={{ backgroundColor: `${accent}DD`, boxShadow: `0 0 30px ${accent}60` }}
-            >
-              View Case Study
-              <ArrowUpRight size={14} />
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* ─ Info zone ─ */}
-        <div className="p-5" style={{ transform: 'translateZ(20px)' }}>
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p
-                className="mb-1 font-mono text-[9px] uppercase tracking-[0.22em]"
-                style={{ color: accent }}
-              >
-                // {item.tags[0]}
-              </p>
-              <h3 className="text-base font-bold text-text-primary sm:text-lg">
-                {item.title}
-              </h3>
-            </div>
-            <Link
-              href={`/portfolio/${item.slug}`}
-              aria-label={`View ${item.title} case study`}
-              className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-border/50 text-text-muted transition-all duration-300 hover:border-violet/50 hover:text-violet hover:-translate-y-0.5"
-            >
-              <ArrowUpRight size={14} />
-            </Link>
-          </div>
-
-          <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-text-muted">
-            {item.description}
-          </p>
-
-          {/* Tags strip */}
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {item.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-border/40 px-2.5 py-0.5 font-mono text-[9px] text-text-ghost"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          {/* Outcome metrics */}
-          <div className="mt-4 border-t border-border/30 pt-4">
-            <div className="grid grid-cols-1 gap-1.5">
-              {item.outcomeMetrics.slice(0, 2).map((metric) => (
-                <div key={metric} className="flex items-center gap-2 text-xs text-text-muted">
-                  <span
-                    className="h-1 w-1 flex-shrink-0 rounded-full"
-                    style={{ backgroundColor: accent }}
-                    aria-hidden="true"
-                  />
-                  {metric}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
 }
 
 // ─── Featured case study (full-width hero card) ───────────────────────────────
@@ -310,12 +114,6 @@ function FeaturedCard({ item }: { item: PortfolioItem }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PortfolioPage() {
-  const [activeFilter, setActiveFilter] = useState<PortfolioFilter>('All')
-
-  const filtered = activeFilter === 'All'
-    ? PORTFOLIO
-    : PORTFOLIO.filter((p) => p.category === activeFilter)
-
   const featured = PORTFOLIO[0]
 
   return (
@@ -397,48 +195,8 @@ export default function PortfolioPage() {
           <FeaturedCard item={featured} />
         </div>
 
-        {/* ─── Filter bar ───────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-10 flex flex-wrap items-center gap-2.5"
-        >
-          {PORTFOLIO_FILTERS.map((cat) => {
-            const isActive = activeFilter === cat
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setActiveFilter(cat)}
-                className="relative rounded-full px-5 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet/40"
-                style={{
-                  backgroundColor: isActive ? '#7C5BFF' : 'rgba(255,255,255,0.05)',
-                  color: isActive ? '#ffffff' : '#7A7A9C',
-                  border: isActive ? '1px solid #7C5BFF' : '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: isActive ? '0 0 20px rgba(124,91,255,0.35)' : 'none',
-                }}
-              >
-                {cat}
-              </button>
-            )
-          })}
-          <span className="ml-auto font-mono text-xs text-text-ghost">
-            {filtered.length} project{filtered.length !== 1 ? 's' : ''}
-          </span>
-        </motion.div>
-
-        {/* ─── Case Study Grid ──────────────────────────────────── */}
-        <div
-          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2"
-          style={{ perspective: '1200px' }}
-        >
-          <AnimatePresence mode="popLayout">
-            {filtered.map((item, i) => (
-              <CaseStudyCard key={item.id} item={item} index={i} />
-            ))}
-          </AnimatePresence>
-        </div>
+        {/* ─── Case Study Vault ──────────────────────────────────── */}
+        <PortfolioGrid />
 
         {/* ─── Deep-dive strip ──────────────────────────────────── */}
         <motion.div
