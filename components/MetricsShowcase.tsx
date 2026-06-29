@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useCallback, useState } from 'react'
-import { motion, useTransform, useScroll } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { OdometerCounter } from '@/components/OdometerCounter'
 
 interface MetricItem {
@@ -151,20 +151,10 @@ function GlassMetricCard({
 
         {/* Metric value with odometer */}
         <div
-          className="mb-3 font-display font-bold tracking-tighter text-text-primary"
+          className="mb-3 font-display font-bold tracking-tighter text-text-primary flex items-baseline"
           style={{ fontSize: 'clamp(2.8rem, 5vw, 4rem)' }}
         >
-          {typeof value === 'number' ? (
-            <>
-              <OdometerCounter value={value} />
-              {suffix && <span className={`text-xl ml-1 ${ACCENT_TEXT[accent]}`}>{suffix}</span>}
-            </>
-          ) : (
-            <>
-              {value}
-              {suffix && <span className={`text-xl ${ACCENT_TEXT[accent]}`}>{suffix}</span>}
-            </>
-          )}
+          <OdometerCounter value={value} suffix={suffix} />
         </div>
 
         <h3 className="mb-3 text-sm font-semibold text-text-primary sm:text-base">{title}</h3>

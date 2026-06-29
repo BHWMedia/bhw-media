@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useMemo } from 'react'
-import { useInView, motion } from 'framer-motion'
+import { useRef, useMemo } from 'react'
+import { useInView, motion, useReducedMotion } from 'framer-motion'
 
-const EASE = [0.16, 1, 0.3, 1] as const
+// STEADICAM spring configuration as per requirements
+const STEADICAM = { mass: 3, stiffness: 45, damping: 25 }
 
 interface OdometerCounterProps {
   value: number | string
@@ -23,38 +24,48 @@ function parseNumericParts(value: number | string): { prefix: string; digits: st
 function DigitDrum({
   digit,
   delay,
-  duration,
   active,
+  isReducedMotion,
 }: {
   digit: string
   delay: number
-  duration: number
   active: boolean
+  isReducedMotion: boolean
 }) {
   const target = parseInt(digit, 10)
+  // Strip goes from 0-9 and then 0 again for a seamless feel if we ever looped,
+  // but here it's just to provide a standard set of digits.
   const strip = useMemo(
     () => Array.from({ length: 11 }, (_, i) => (i > 9 ? 0 : i)),
     [],
   )
 
   return (
-    <span className="odometer-digit" aria-hidden="true">
-      <motion.span
-        className="odometer-strip"
-        initial={{ y: 0 }}
-        animate={active ? { y: `-${target}em` } : { y: 0 }}
-        transition={{
-          duration,
-          delay,
-          ease: EASE,
-        }}
-      >
-        {strip.map((n, i) => (
-          <span key={i} className="block h-[1em] leading-none tabular-nums">
-            {n}
-          </span>
-        ))}
-      </motion.span>
+    <span className="relative inline-block h-[1em] overflow-hidden tabular-nums" aria-hidden="true">
+      {/* Static digit: visible immediately for SSR/SEO and Fallback */}
+      <span className={active && !isReducedMotion ? "invisible" : "visible"}>
+        {digit}
+      </span>
+      
+      {/* Animated drum: marked aria-hidden and only rendered if motion is allowed */}
+      {!isReducedMotion && (
+        <motion.span
+          className="absolute left-0 top-0 flex flex-col"
+          initial={{ y: 0 }}
+          animate={active ? { y: `-${target}em` } : { y: 0 }}
+          transition={{
+            ...STEADICAM,
+            delay,
+          }}
+          aria-hidden="true"
+        >
+          {strip.map((n, i) => (
+            <span key={i} className="block h-[1em] leading-none">
+              {n}
+            </span>
+          ))}
+        </motion.span>
+      )}
     </span>
   )
 }
@@ -64,27 +75,41 @@ export function OdometerCounter({
   suffix = '',
   prefix = '',
   className = '',
-  duration = 1.2,
 }: OdometerCounterProps) {
   const ref = useRef<HTMLSpanElement>(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
+  const isReducedMotion = useReducedMotion()
+  
   const parsed = parseNumericParts(value)
   const digits = parsed.digits.split('')
 
+  const fullValue = `${prefix || parsed.prefix}${parsed.digits}${parsed.suffix || suffix}`
+
   return (
-    <span ref={ref} className={`inline-flex items-baseline ${className}`}>
-      {prefix || parsed.prefix}
-      {digits.map((d, i) => (
-        <DigitDrum
-          key={`${i}-${d}`}
-          digit={d}
-          delay={(digits.length - 1 - i) * 0.08}
-          duration={duration}
-          active={inView}
-        />
-      ))}
-      {parsed.suffix}
-      {suffix}
+    <span 
+      ref={ref} 
+      className={`inline-flex items-baseline ${className}`}
+      role="img" 
+      aria-label={fullValue}
+    >
+      <span aria-hidden="true" className="flex items-baseline">
+        {prefix || parsed.prefix}
+        {digits.map((d, i) => (
+          <DigitDrum
+            key={`${i}-${d}`}
+            digit={d}
+            delay={(digits.length - 1 - i) * 0.1}
+            active={inView}
+            isReducedMotion={isReducedMotion ?? false}
+          />
+        ))}
+        {parsed.suffix || suffix}
+      </span>
+      
+      {/* Hidden text for screen readers ensuring accessibility */}
+      <span className="sr-only">
+        {fullValue}
+      </span>
     </span>
   )
 }

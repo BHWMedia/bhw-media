@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useSpring, useTransform, useScroll, useReducedMotion } from 'framer-motion'
 import {
   Globe,
   LayoutDashboard,
@@ -19,6 +19,9 @@ const ICONS: Record<string, LucideIcon> = {
 }
 
 const EASE = [0.16, 1, 0.3, 1] as const
+
+// STEADICAM spring config as per requirements
+const STEADICAM = { mass: 3, stiffness: 45, damping: 25 }
 
 const MATERIAL: Record<AccentColor, { bg: string; border: string; glow: string }> = {
   violet: {
@@ -66,18 +69,18 @@ function ServiceIcon3D({ icon: Icon, accent }: { icon: LucideIcon; accent: Accen
   )
 }
 
-function ServiceCard({ service, index }: { service: (typeof SERVICES)[number]; index: number }) {
+function ServiceCard({ service, index, isReducedMotion }: { service: (typeof SERVICES)[number]; index: number; isReducedMotion: boolean }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [hovered, setHovered] = useState(false)
 
-  // 3D tilt on mouse move
+  // 3D tilt on mouse move (only if not reduced motion)
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
   const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), { stiffness: 200, damping: 30 })
   const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), { stiffness: 200, damping: 30 })
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return
+    if (!cardRef.current || isReducedMotion) return
     const rect = cardRef.current.getBoundingClientRect()
     mouseX.set((e.clientX - rect.left - rect.width / 2) / rect.width)
     mouseY.set((e.clientY - rect.top - rect.height / 2) / rect.height)
@@ -98,13 +101,13 @@ function ServiceCard({ service, index }: { service: (typeof SERVICES)[number]; i
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={handleMouseLeave}
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 32, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.65, delay: index * 0.07, ease: EASE }}
+      transition={{ ...STEADICAM, delay: index * 0.05 }}
       style={{
-        rotateX,
-        rotateY,
+        rotateX: isReducedMotion ? 0 : rotateX,
+        rotateY: isReducedMotion ? 0 : rotateY,
         transformStyle: 'preserve-3d',
         background: m.bg,
         backdropFilter: 'blur(32px) saturate(200%)',
@@ -115,7 +118,7 @@ function ServiceCard({ service, index }: { service: (typeof SERVICES)[number]; i
           : '0 10px 36px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.05)',
         transition: 'border-color 0.35s ease, box-shadow 0.35s ease',
       }}
-      className="relative flex flex-col justify-between overflow-hidden rounded-3xl p-7 sm:p-8 h-full"
+      className="relative flex flex-col justify-between overflow-hidden rounded-3xl p-7 sm:p-8 h-[440px] w-[320px] sm:w-[400px] flex-shrink-0"
     >
       {/* Ambient glow blob */}
       <div
@@ -177,37 +180,85 @@ function ServiceCard({ service, index }: { service: (typeof SERVICES)[number]; i
 }
 
 export function HorizontalServicesScroll() {
-  return (
-    <section className="mx-auto max-w-6xl px-6 py-20">
-      {/* Section header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.6, ease: EASE }}
-        className="mb-12"
-      >
-        <span className="font-mono text-xs uppercase tracking-[0.18em] text-cyan">
-          // Disciplines
-        </span>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
-            Six specialisms. One standard.
-          </h2>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-text-ghost">
-            {SERVICES.length} services
-          </span>
-        </div>
-      </motion.div>
+  const targetRef = useRef<HTMLDivElement>(null)
+  const isReducedMotion = useReducedMotion()
+  
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+  })
 
-      {/* 3 + 3 grid — no sticky scroll, no blank void */}
-      <div
-        className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-        style={{ perspective: '1200px' }}
-      >
-        {SERVICES.map((service, i) => (
-          <ServiceCard key={service.title} service={service} index={i} />
-        ))}
+  // Horizontal translation driven by vertical scroll.
+  // Using -68% as a safe translation for 6 cards across typical viewports.
+  const x = useTransform(scrollYProgress, [0.1, 0.9], ['0%', '-68%'])
+
+  if (isReducedMotion) {
+    return (
+      <section className="mx-auto max-w-6xl px-6 py-20 bg-void">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.6, ease: EASE }}
+          className="mb-12"
+        >
+          <span className="font-mono text-xs uppercase tracking-[0.18em] text-cyan">
+            // Disciplines
+          </span>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-text-primary sm:text-3xl lg:text-4xl">
+              Six specialisms. One standard.
+            </h2>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-text-ghost">
+              {SERVICES.length} services
+            </span>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {SERVICES.map((service, i) => (
+            <ServiceCard key={service.title} service={service} index={i} isReducedMotion={true} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section ref={targetRef} className="relative h-[350vh] bg-void">
+      <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+        <div className="flex flex-col w-full">
+            {/* Sticky Header */}
+            <div className="px-6 mb-12 max-w-6xl mx-auto w-full">
+                 <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, ease: EASE }}
+                >
+                    <span className="font-mono text-xs uppercase tracking-[0.18em] text-cyan">
+                    // Disciplines
+                    </span>
+                    <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+                        <h2 className="font-display text-2xl font-bold tracking-tight text-text-primary sm:text-4xl lg:text-5xl">
+                            Six specialisms. One standard.
+                        </h2>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-text-ghost">
+                            Scroll to explore
+                        </span>
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* Horizontal Track */}
+            <motion.div 
+              style={{ x, willChange: 'transform' }} 
+              className="flex gap-6 px-[10vw]"
+            >
+                {SERVICES.map((service, i) => (
+                    <ServiceCard key={service.title} service={service} index={i} isReducedMotion={false} />
+                ))}
+            </motion.div>
+        </div>
       </div>
     </section>
   )
